@@ -1,0 +1,26 @@
+{
+  "name": "solana_arweave_bridge",
+  "version": "1.0.0",
+  "description": "This project is a bridge to connect Solana ledger data to Arweave permanent storage",
+  "main": "index.js",
+  "repository": "git@github.com:exyte/solana_arweave_bridge.git",
+  "author": "Alexey Khmelev <alexey@ubikgroup.co>",
+  "license": "MIT",
+  "scripts": {
+    "start": "yarn build && node -e 'require(\"./dist/index.js\").start()'",
+    "start:dev": "ts-node -e 'require(\"./src/index.ts\").start()'",
+    "build": "tsc --outDir dist",
+    "test": "npm run build && mocha dist/test"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^0.71.6",
+    "arweave": "^1.9.1",
+    "commander": "^6.0.0",
+    "dotenv": "^8.2.0",
+    "node-fetch": "^2.6.0",
+    "typescript": "^4.0.2"
+  },
+  "devDependencies": {
+    "ts-node": "^9.0.0"
+  }
+}
