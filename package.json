@@ -7,8 +7,8 @@
   "author": "Alexey Khmelev <alexey@ubikgroup.co>",
   "license": "MIT",
   "scripts": {
-    "start": "yarn build && node -e 'require(\"./dist/index.js\").start()'",
-    "start:dev": "ts-node -e 'require(\"./src/index.ts\").start()'",
+    "start": "yarn build && node -e 'require(\"./dist/solanaTransactions.js\").start()'",
+    "start:dev": "ts-node -e 'require(\"./src/solanaTransactions.ts\").start()'",
     "build": "tsc --outDir dist",
     "test": "npm run build && mocha dist/test"
   },
@@ -17,6 +17,7 @@
     "arweave": "^1.9.1",
     "commander": "^6.0.0",
     "dotenv": "^8.2.0",
+    "moment": "^2.27.0",
     "node-fetch": "^2.6.0",
     "typescript": "^4.0.2"
   },
