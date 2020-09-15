@@ -1,7 +1,7 @@
-import { ConfirmedBlock, ConfirmedTransactionMeta, Connection, Transaction } from '@solana/web3.js'
+import { ConfirmedBlock, Connection } from '@solana/web3.js'
 import * as dotenv from 'dotenv';
 import fetch from 'node-fetch';
-import { saveTxToArweave } from "./arweaveTransactions";
+import { saveBlockToArweave } from "./arweaveTransactions";
 
 dotenv.config({ path: `.env` });
 
@@ -35,14 +35,13 @@ export async function start() {
 
     try {
       const { result } = await getConfirmedBlocks(lastFetchedSlot + 1, nextSlot)
-      const confirmedBlocks: ConfirmedBlock[] = await Promise.all(result.map((slot) => connection.getConfirmedBlock(slot)))
-      for (const block of confirmedBlocks) {
-        console.log({ block })
-        const { transactions } = block
-        for (const tx of transactions) {
-          await saveTxToArweave(tx);
-          // process.exit(0);
-        }
+      console.log({result})
+      const confirmedBlocks: {slot: number, confirmedBlock: ConfirmedBlock}[] = await Promise.all(result.map(async (slot) => {
+        let confirmedBlock = await connection.getConfirmedBlock(slot);
+        return {slot, confirmedBlock};
+      }))
+      for (const data of confirmedBlocks) {
+        await saveBlockToArweave(data.confirmedBlock, data.slot);
       }
 
       lastFetchedSlot = nextSlot
