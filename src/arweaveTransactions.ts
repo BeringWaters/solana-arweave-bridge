@@ -2,6 +2,11 @@ import { ConfirmedBlock } from "@solana/web3.js";
 import * as dotenv from "dotenv";
 import { Queue, Worker } from "bullmq";
 
+import * as Redis from 'ioredis';
+
+const redis = new Redis();
+
+
 const Arweave = require('arweave');
 import moment = require("moment");
 
@@ -25,7 +30,7 @@ const wallet = require(`../${process.env.KEY_PATH}`)
 export const PENDING_BLOCKS_QUEUE = 'PENDING_BLOCKS_QUEUE'
 export const SAVED_BLOCKS_QUEUE = 'SAVED_BLOCKS_QUEUE'
 
-const LAST_SAVED_BLOCK_KEY = 'LAST_SAVED_BLOCK_KEY'
+export const LAST_SAVED_BLOCK_KEY = 'LAST_SAVED_BLOCK_KEY'
 
 const pendingBlocksQueue = new Queue(PENDING_BLOCKS_QUEUE);
 const savedBlocksQueue = new Queue(SAVED_BLOCKS_QUEUE);
@@ -49,17 +54,17 @@ export async function saveBlockToArweave(solanaBlock: ConfirmedBlock, slotNumber
   console.log(arweaveTx.id)
   // const result = await await arweave.transactions.post(arweaveTx)
 
-  await pendingBlocksQueue.add(slotNumber.toString(), arweaveTx)
+  await pendingBlocksQueue.add(slotNumber.toString(), {arweaveTx, parentSlot: solanaBlock.parentSlot })
 }
 
 
 async function checkArweaveTxStatus(job) {
   const txData = job.data;
   const { id } = txData;
-  // ONLY FOR TEST MOVE TO THE SAVED TXS QUEUE IF IT WAS 1 SECOND IN THIS QUEUE
+  // ONLY FOR TEST MOVE TO THE SAVED TXS QUEUE IN RANDOM WAY
   const jobTimestamp = job.timestamp
   const currentTime = new Date().getTime()
-  if (currentTime > jobTimestamp + 1000) {
+  if (Math.random() > 0.8) {
     return true
   }
   return false
@@ -68,7 +73,7 @@ async function checkArweaveTxStatus(job) {
 const blockStatusPollingWorker = new Worker(PENDING_BLOCKS_QUEUE, async (job) => {
   console.log({ checkStatus: job.name });
   const hasSuccessStatus = await checkArweaveTxStatus(job)
-  if(hasSuccessStatus) {
+  if (hasSuccessStatus) {
     await savedBlocksQueue.add(job.name, job.data)
   } else {
     await pendingBlocksQueue.add(job.name, job.data)
@@ -77,5 +82,16 @@ const blockStatusPollingWorker = new Worker(PENDING_BLOCKS_QUEUE, async (job) =>
 
 
 const savedBlockWorker = new Worker(SAVED_BLOCKS_QUEUE, async (job) => {
-  console.log({ savedBlock: job.name });
+  const lastSavedBlockKey = await redis.get(LAST_SAVED_BLOCK_KEY);
+  const savedBlock = job.name
+  const {parentSlot} = job.data
+  console.log({ savedBlock, lastSavedBlockKey });
+  if (!lastSavedBlockKey) {
+    await redis.set(LAST_SAVED_BLOCK_KEY, savedBlock);
+  } else if (Number.parseInt(lastSavedBlockKey) === job.data.parentSlot) {
+    await redis.incr(LAST_SAVED_BLOCK_KEY);
+    console.log({ LAST_SAVED_BLOCK_KEY: savedBlock })
+  } else {
+    await savedBlocksQueue.add(job.name, job.data)
+  }
 })
