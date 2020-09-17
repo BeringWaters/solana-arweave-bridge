@@ -1,7 +1,18 @@
-import { ConfirmedBlock, ConfirmedTransactionMeta, Connection, Transaction } from '@solana/web3.js'
+import { ConfirmedBlock, Connection } from '@solana/web3.js'
 import * as dotenv from 'dotenv';
 import fetch from 'node-fetch';
-import { saveTxToArweave } from "./arweaveTransactions";
+import {
+  LAST_SAVED_BLOCK_KEY,
+  PENDING_BLOCKS_QUEUE,
+  saveBlockToArweave,
+  SAVED_BLOCKS_QUEUE
+} from "./arweaveTransactions";
+import { Queue } from "bullmq";
+
+
+import * as Redis from 'ioredis';
+const redis = new Redis();
+
 
 dotenv.config({ path: `.env` });
 
@@ -20,12 +31,22 @@ const getConfirmedBlocks = async (fromSlot, toSlot) => {
 }
 
 
+const redisCleanupOnRestart = async () => {
+  await redis.set(LAST_SAVED_BLOCK_KEY, null); // FIXME need this value on restart
+  const pendingBlocksQueue = new Queue(PENDING_BLOCKS_QUEUE);
+  const savedBlocksQueue = new Queue(SAVED_BLOCKS_QUEUE);
+  await pendingBlocksQueue.drain()
+  await savedBlocksQueue.drain()
+}
+
 export async function start() {
   console.log("Arweave initialization...")
   console.log("Blocks fetching started...")
   console.log({ SOLANA_NODE_URL: process.env.SOLANA_NODE_URL })
 
   const connection = new Connection(process.env.SOLANA_NODE_URL)
+
+  await redisCleanupOnRestart()
 
   let lastFetchedSlot = await connection.getSlot() // TODO persist last fetched block for correct restart
 
@@ -35,14 +56,14 @@ export async function start() {
 
     try {
       const { result } = await getConfirmedBlocks(lastFetchedSlot + 1, nextSlot)
-      const confirmedBlocks: ConfirmedBlock[] = await Promise.all(result.map((slot) => connection.getConfirmedBlock(slot)))
-      for (const block of confirmedBlocks) {
-        console.log({ block })
-        const { transactions } = block
-        for (const tx of transactions) {
-          await saveTxToArweave(tx);
-          // process.exit(0);
-        }
+      console.log({result})
+      const confirmedBlocks: {slot: number, confirmedBlock: ConfirmedBlock}[] = await Promise.all(result.map(async (slot) => {
+        let confirmedBlock = await connection.getConfirmedBlock(slot);
+        return {slot, confirmedBlock};
+      }))
+      for (const data of confirmedBlocks) {
+        // FIXME process unconfirmed block as skipped to save lastSavedBlockCorrectly
+        await saveBlockToArweave(data.confirmedBlock, data.slot);
       }
 
       lastFetchedSlot = nextSlot
