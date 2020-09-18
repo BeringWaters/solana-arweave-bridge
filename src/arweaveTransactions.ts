@@ -9,6 +9,8 @@ const redis = new Redis();
 
 const Arweave = require('arweave');
 import moment = require("moment");
+var msgpack = require('msgpack-lite');
+
 
 dotenv.config({ path: `.env` });
 
@@ -37,13 +39,11 @@ const savedBlocksQueue = new Queue(SAVED_BLOCKS_QUEUE);
 
 
 export async function saveBlockToArweave(solanaBlock: ConfirmedBlock, slotNumber: number) {
-  console.log({ saveSlot: slotNumber })
+  const encodedData = msgpack.encode(solanaBlock);
 
-  const arweaveTx = await arweave.createTransaction(
-    {
+  const arweaveTx = await arweave.createTransaction({
       target: ARWEAVE_ADDRESS,
-      data: `Test string: ${moment.now()}`,
-      // quantity: tokens
+      data: encodedData,
     },
     wallet
   )
@@ -62,12 +62,8 @@ async function checkArweaveTxStatus(job) {
   const txData = job.data;
   const { id } = txData;
   // ONLY FOR TEST MOVE TO THE SAVED TXS QUEUE IN RANDOM WAY
-  const jobTimestamp = job.timestamp
-  const currentTime = new Date().getTime()
-  if (Math.random() > 0.8) {
-    return true
-  }
-  return false
+  return Math.random() > 0.8;
+
 }
 
 const blockStatusPollingWorker = new Worker(PENDING_BLOCKS_QUEUE, async (job) => {
@@ -81,17 +77,22 @@ const blockStatusPollingWorker = new Worker(PENDING_BLOCKS_QUEUE, async (job) =>
 })
 
 
-const savedBlockWorker = new Worker(SAVED_BLOCKS_QUEUE, async (job) => {
-  const lastSavedBlockKey = await redis.get(LAST_SAVED_BLOCK_KEY);
+const savedBlockWorker = new Worker(SAVED_BLOCKS_QUEUE, async (job) => { // FIXME THIS WORKER WORKS NOT CORRECT. NEED TO DEBUG...
+  const lastSavedBlock = await redis.get(LAST_SAVED_BLOCK_KEY);
   const savedBlock = job.name
   const {parentSlot} = job.data
-  console.log({ savedBlock, lastSavedBlockKey });
-  if (!lastSavedBlockKey) {
+  console.log({ savedBlock, lastSavedBlock, parentSlot });
+  let jobs = await savedBlocksQueue.getJobs(['waiting', 'active' ]);
+  console.log({jobs: jobs.map(job => job.name)})
+  if(Number.parseInt(lastSavedBlock) >  Number.parseInt(savedBlock)) {
+    return
+  }
+  if (!lastSavedBlock) {
     await redis.set(LAST_SAVED_BLOCK_KEY, savedBlock);
-  } else if (Number.parseInt(lastSavedBlockKey) === job.data.parentSlot) {
-    await redis.incr(LAST_SAVED_BLOCK_KEY);
+  } else if (Number.parseInt(lastSavedBlock) === parentSlot) {
+    await redis.set(LAST_SAVED_BLOCK_KEY, savedBlock);
     console.log({ LAST_SAVED_BLOCK_KEY: savedBlock })
   } else {
-    await savedBlocksQueue.add(job.name, job.data)
+    await savedBlocksQueue.add(job.name, job.data, {lifo: true})
   }
 })
