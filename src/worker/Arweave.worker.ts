@@ -9,6 +9,7 @@ import { ARWEAVE_OPTIONS, ARWEAVE_ADDRESS, WINSTON_TO_AR } from '../config';
 const redis = new Redis();
 
 const Arweave = require('arweave');
+import * as msgpack from 'msgpack-lite';
 
 dotenv.config({ path: `.env` });
 
@@ -25,12 +26,8 @@ export const LAST_SAVED_BLOCK_KEY = 'LAST_SAVED_BLOCK_KEY';
 const pendingBlocksQueue = new Queue(PENDING_BLOCKS_QUEUE);
 const savedBlocksQueue = new Queue(SAVED_BLOCKS_QUEUE);
 
-const compressTxData = (transactions: {
-  transaction: Transaction;
-  meta: ConfirmedTransactionMeta | null;
-}[]) => {
-  // TODO: compress!!! flat buffer? https://github.com/ygoe/msgpack.js/? https://www.npmjs.com/package/msgpack-lite/?
-  return JSON.stringify(transactions);
+const compressTxData = (transactions) => {
+  return msgpack.encode(transactions);
 };
 
 export async function saveBlockToArweave(solanaBlock: ConfirmedBlock, slotNumber: number) {
@@ -70,13 +67,8 @@ export async function saveBlockToArweave(solanaBlock: ConfirmedBlock, slotNumber
 async function checkArweaveTxStatus(job) {
   const txData = job.data;
   const { id } = txData;
-  // ONLY FOR TEST MOVE TO THE SAVED TXS QUEUE IN RANDOM WAY
-  const jobTimestamp = job.timestamp
-  const currentTime = new Date().getTime()
-  if (Math.random() > 0.8) {
-    return true
-  }
-  return false
+  // test
+  return Math.random() > 0.8;
 }
 
 const blockStatusPollingWorker = new Worker(PENDING_BLOCKS_QUEUE, async (job) => {
@@ -90,17 +82,22 @@ const blockStatusPollingWorker = new Worker(PENDING_BLOCKS_QUEUE, async (job) =>
 });
 
 
-const savedBlockWorker = new Worker(SAVED_BLOCKS_QUEUE, async (job) => {
-  const lastSavedBlockKey = await redis.get(LAST_SAVED_BLOCK_KEY);
-  const savedBlock = job.name
-  const { parentSlot } = job.data
-  console.log({ savedBlock, lastSavedBlockKey });
-  if (!lastSavedBlockKey) {
+const savedBlockWorker = new Worker(SAVED_BLOCKS_QUEUE, async (job) => { // FIXME THIS WORKER WORKS NOT CORRECT. NEED TO DEBUG...
+  const lastSavedBlock = await redis.get(LAST_SAVED_BLOCK_KEY);
+  const savedBlock = job.name;
+  const { parentSlot } = job.data;
+  console.log({ savedBlock, lastSavedBlock, parentSlot });
+  let jobs = await savedBlocksQueue.getJobs(['waiting', 'active' ]);
+  console.log({jobs: jobs.map(job => job.name)});
+  if(Number.parseInt(lastSavedBlock) >  Number.parseInt(savedBlock)) {
+    return
+  }
+  if (!lastSavedBlock) {
     await redis.set(LAST_SAVED_BLOCK_KEY, savedBlock);
-  } else if (Number.parseInt(lastSavedBlockKey) === job.data.parentSlot) {
-    await redis.incr(LAST_SAVED_BLOCK_KEY);
-    console.log({ LAST_SAVED_BLOCK_KEY: savedBlock })
+  } else if (Number.parseInt(lastSavedBlock) === parentSlot) {
+    await redis.set(LAST_SAVED_BLOCK_KEY, savedBlock);
+    console.log({ LAST_SAVED_BLOCK_KEY: savedBlock });
   } else {
-    await savedBlocksQueue.add(job.name, job.data)
+    await savedBlocksQueue.add(job.name, job.data, {lifo: true});
   }
 });

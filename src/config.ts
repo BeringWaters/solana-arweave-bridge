@@ -21,3 +21,5 @@ export const ARWEAVE_ADDRESS = 'QkbQ9Cq7x6I7Jnmw5mePKDSEVavTMvABBPMJY6nGZLY';
 export const MAX_SLOT_CHUNK_SIZE = 500000;
 
 export const WINSTON_TO_AR = 10e12;
+
+export const MAX_RESPONSE_ATTEMPTS = process.env.MAX_RESPONSE_ATTEMPTS || 5;
