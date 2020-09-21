@@ -9,6 +9,7 @@ import { ARWEAVE_OPTIONS, ARWEAVE_ADDRESS, WINSTON_TO_AR } from '../config';
 const redis = new Redis();
 
 const Arweave = require('arweave');
+import msgpack from 'msgpack-lite';
 
 dotenv.config({ path: `.env` });
 
@@ -25,12 +26,8 @@ export const LAST_SAVED_BLOCK_KEY = 'LAST_SAVED_BLOCK_KEY';
 const pendingBlocksQueue = new Queue(PENDING_BLOCKS_QUEUE);
 const savedBlocksQueue = new Queue(SAVED_BLOCKS_QUEUE);
 
-const compressTxData = (transactions: {
-  transaction: Transaction;
-  meta: ConfirmedTransactionMeta | null;
-}[]) => {
-  // TODO: compress!!! flat buffer? https://github.com/ygoe/msgpack.js/? https://www.npmjs.com/package/msgpack-lite/?
-  return JSON.stringify(transactions);
+const compressTxData = (transactions) => {
+  return msgpack.encode(transactions);
 };
 
 export async function saveBlockToArweave(solanaBlock: ConfirmedBlock, slotNumber: number) {
