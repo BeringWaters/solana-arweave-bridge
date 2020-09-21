@@ -1,5 +1,22 @@
 import axios from 'axios';
-import { SOLANA_OPTIONS } from '../config';
+import { SOLANA_OPTIONS, MAX_RESPONSE_ATTEMPTS } from '../config';
+
+// Add a response interceptor
+axios.interceptors.response.use((response) => {
+  if (response.data.error) {
+    throw new Error(response.data.error.message);
+  }
+  return response;
+}, function (error) {
+  // Any status codes that falls outside the range of 2xx cause this function to trigger
+  const { response, config: originalRequest } = error;
+  if (response.status === 429 && (!originalRequest.retry || originalRequest.retry <= MAX_RESPONSE_ATTEMPTS)) {
+    originalRequest.retry = originalRequest.retry ? originalRequest.retry + 1 : 1;
+    return (new Promise(resolve => setTimeout(resolve, originalRequest.retry * 1000)))
+      .then(() => axios(originalRequest));
+  }
+  throw new Error(`${error.message}: ${response.statusText}`);
+});
 
 export async function getGenesisHash(id: number = 1) {
   const { data } = await axios
