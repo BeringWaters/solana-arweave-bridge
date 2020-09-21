@@ -9,7 +9,7 @@ import { ARWEAVE_OPTIONS, ARWEAVE_ADDRESS, WINSTON_TO_AR } from '../config';
 const redis = new Redis();
 
 const Arweave = require('arweave');
-import msgpack from 'msgpack-lite';
+import * as msgpack from 'msgpack-lite';
 
 dotenv.config({ path: `.env` });
 
