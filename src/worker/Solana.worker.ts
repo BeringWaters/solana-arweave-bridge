@@ -15,8 +15,8 @@ const redisCleanupOnRestart = async () => {
   await redis.set(LAST_SAVED_BLOCK_KEY, null); // FIXME need this value on restart
   const pendingBlocksQueue = new Queue(PENDING_BLOCKS_QUEUE);
   const savedBlocksQueue = new Queue(SAVED_BLOCKS_QUEUE);
-  await pendingBlocksQueue.drain();
-  await savedBlocksQueue.drain();
+  await pendingBlocksQueue.clean(1000, 1000);
+  await savedBlocksQueue.clean(1000, 1000);
 };
 
 export const start = async () => {
