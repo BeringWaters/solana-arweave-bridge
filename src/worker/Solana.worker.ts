@@ -31,27 +31,28 @@ export const start = async () => {
   const confirmedSlots = [];
   let lastFetchedSlot = firstSlot;
 
-  while (lastFetchedSlot - lastSlot <= MAX_SLOT_CHUNK_SIZE) {
-    const lastSlotToFetch = lastFetchedSlot + MAX_SLOT_CHUNK_SIZE;
-    const { result: confirmedSlotsChunk } = await getConfirmedSlots(lastFetchedSlot, lastSlotToFetch > lastSlot ? lastSlot : lastSlotToFetch);
-    confirmedSlots.push(...confirmedSlotsChunk);
-    lastFetchedSlot = lastSlotToFetch;
+  try {
+    while (lastFetchedSlot - lastSlot <= MAX_SLOT_CHUNK_SIZE) {
+      const lastSlotToFetch = lastFetchedSlot + MAX_SLOT_CHUNK_SIZE;
+      const { result: confirmedSlotsChunk } = await getConfirmedSlots(lastFetchedSlot, lastSlotToFetch > lastSlot ? lastSlot : lastSlotToFetch);
+      confirmedSlots.push(...confirmedSlotsChunk);
+      lastFetchedSlot = lastSlotToFetch;
+    }
+  } catch (e) {
+    console.log(`Failed to get confirmed slots: ${e.message}`);
+    return;
   }
 
   // add job that enlarges confirmedBlocks with getCurrentSlot() + getConfirmedBlocks() if lastBlock not in options
 
-  while (true) {
-    for (const slot of confirmedSlots) {
-      try {
-        const { result: confirmedBlock } = await getConfirmedBlock(slot);
-        await saveBlockToArweave(confirmedBlock, slot);
-        console.log(`Last saved slot: ${slot}`); // TODO: save last saved slot
-      } catch (e) {
-        console.log(`Failed to proceed slot ${slot}: ${e.message}`);
-      }
-      console.log('\n');
-
-      await (new Promise(resolve => setTimeout(resolve, 500)));
+  for (const slot of confirmedSlots) {
+    try {
+      const { result: confirmedBlock } = await getConfirmedBlock(slot);
+      await saveBlockToArweave(confirmedBlock, slot);
+      console.log(`Last saved slot: ${slot}`); // TODO: save last saved slot
+    } catch (e) {
+      console.log(`Failed to proceed slot ${slot}: ${e.message}`);
     }
+    console.log('\n');
   }
 };
