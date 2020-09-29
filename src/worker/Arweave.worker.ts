@@ -1,7 +1,6 @@
 import { ConfirmedBlock } from '@solana/web3.js';
 import { Queue, QueueScheduler, Worker, Job } from 'bullmq';
 import * as Redis from 'ioredis';
-import * as msgpack from 'msgpack-lite';
 import {
   WINSTON_TO_AR,
   TX_STATUS_POLLING_DELAY,
@@ -10,6 +9,7 @@ import {
   TX_NUMBER_OF_CONFIRMATIONS,
 } from '../config';
 import { addTagsToTxs } from '../service/Arweave.tag.service';
+import { compressData } from '../service/Arweave.compression.service';
 import arweaveAPI from '../api/Arweave.api';
 
 const redis = new Redis();
@@ -30,12 +30,6 @@ const postingTxsQueue = new Queue(POSTING_TXS_QUEUE,{
 const pendingTxsQueue = new Queue(PENDING_TXS_QUEUE);
 const pendingTxsQueueScheduler = new QueueScheduler(PENDING_TXS_QUEUE);
 const savedTxsQueue = new Queue(SAVED_TXS_QUEUE);
-
-const compressTxsData = (transactions) => {
-  const compressed = msgpack.encode(transactions);
-  const compressedString = compressed.toString('base64');
-  return compressedString;
-};
 
 const signAndPostTransaction = async (tx) => {
   await arweaveAPI.signTransaction(tx);
@@ -112,13 +106,11 @@ export async function saveBlockToArweave(solanaBlock: ConfirmedBlock, slotNumber
       return txContainers;
     }, [createContainer(blockhash, slotNumber, containerNumber++)]);
 
-    const container = txContainers[0];
-    container.txs = await compressTxsData(container.txs);
-
     await Promise.all(txContainers.map(async (container) => {
       const result = await arweaveAPI.searchContainer(container.tags);
       if (result.length > 0) return;
-      container.txs = await compressTxsData(container.txs);
+      container.txs = await compressData(container.txs);
+
       return (await postingTxsQueue.add(`${container.tags['1']}_${container.tags['2']}`, container));
     }))
   } catch (e) {
