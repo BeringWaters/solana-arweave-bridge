@@ -26,8 +26,8 @@ export const MAX_TAGS_SIZE = 2048;
 
 export const MAX_RESPONSE_ATTEMPTS = 5;
 
-export const TX_STATUS_POLLING_DELAY = 5000;
+export const TX_STATUS_POLLING_DELAY = 30000;
 
 export const TX_STATUS_POLLING_ATTEMPTS = 960;
 
-export const TX_NUMBER_OF_CONFIRMATIONS = 3;
+export const TX_NUMBER_OF_CONFIRMATIONS = 1;
