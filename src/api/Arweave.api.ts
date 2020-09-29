@@ -1,3 +1,5 @@
+import { and, or, equals } from 'arql-ops';
+
 const Arweave = require('arweave');
 import { PublicKey } from '@solana/web3.js';
 
@@ -5,15 +7,24 @@ import axios from 'axios';
 import { ARWEAVE_OPTIONS } from '../config';
 
 const arweave = Arweave.init(ARWEAVE_OPTIONS);
-const wallet = require(`../../${ARWEAVE_OPTIONS.keyPath}`);
+
+const wallet = {
+  'key': undefined,
+  'address': undefined,
+};
+(async () => {
+  wallet.key = require(`../../${ARWEAVE_OPTIONS.keyPath}`);
+  wallet.address = await arweave.wallets.jwkToAddress(wallet.key);
+})();
 
 export const createTransaction = async (data) => {
-  const arweaveTx = await arweave.createTransaction({ data }, wallet);
+  const arweaveTx = await arweave.createTransaction(data, wallet.key);
   return arweaveTx;
 };
 
 export const signTransaction = async (tx) => {
-  return arweave.transactions.sign(tx, wallet);
+  return arweave.transactions.sign(tx, wallet.key);
+  return arweave.transactions.sign(tx, wallet.key);
 };
 
 export const postTransaction = async (tx, chunkUploading = true) => {
@@ -34,7 +45,7 @@ export const getTransactionPrice = async (byteSize: number) => {
 };
 
 export const getWalletBalance = async () => {
-  const balance = await arweave.wallets.getBalance(wallet);
+  const balance = await arweave.wallets.getBalance(wallet.address);
   return balance;
 };
 
@@ -43,11 +54,24 @@ export const getTransactionStatus = async (id) => {
   return txStatus;
 };
 
+export const searchContainer = async (parameters) => {
+  const myQuery = and(
+    equals('1', parameters['1']),
+    equals('2', parameters['2']),
+    equals('3', parameters['3']),
+    equals('4', parameters['4']),
+  );
+
+  const results = await arweave.arql(myQuery);
+  return results;
+};
+
 export default {
   createTransaction,
   signTransaction,
   postTransaction,
   getTransactionPrice,
   getWalletBalance,
-  getTransactionStatus
+  getTransactionStatus,
+  searchContainer,
 }
