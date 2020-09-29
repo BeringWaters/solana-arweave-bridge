@@ -1,8 +1,8 @@
 import { and, or, equals } from 'arql-ops';
 
-export const search = async (arweave) => {
+export const searchBySlotNumber = async (arweave, parameters) => {
   const myQuery = and(
-    equals('network', 'testnet'),
+    equals('1', parameters['1']),
   );
 
   const results = await arweave.arql(myQuery);
