@@ -71,15 +71,7 @@ const fetchSlots = async (first, last) => {
   return fetchedSlots;
 };
 
-export const start = async (options = {
-  firstSlot: 36973609, // 29
-  // firstSlot: 36973613, // 34
-  // firstSlot: 36973441,
-  lastSlot: 36973609,
-  // firstSlot: undefined,
-  // lastSlot: undefined,
-  concurrency: 8,
-}) => {
+export const start = async (options) => {
   await redisCleanupOnRestart();
 
   const start = new Date();
