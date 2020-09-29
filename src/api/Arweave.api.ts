@@ -1,12 +1,9 @@
 import { and, or, equals } from 'arql-ops';
-
-const Arweave = require('arweave');
-import { PublicKey } from '@solana/web3.js';
-
-import axios from 'axios';
 import { ARWEAVE_OPTIONS } from '../config';
 
-const arweave = Arweave.init(ARWEAVE_OPTIONS);
+const Arweave = require('arweave');
+
+export const arweave = Arweave.init(ARWEAVE_OPTIONS);
 
 const wallet = {
   'key': undefined,
@@ -54,6 +51,16 @@ export const getTransactionStatus = async (id) => {
   return txStatus;
 };
 
+export const getTransaction = async (id) => {
+  const tx = await arweave.transactions.get(id);
+  return tx;
+};
+
+export const getTransactionData = async (id) => {
+  const txData = await arweave.transactions.getData(id);
+  return txData;
+};
+
 export const searchContainer = async (parameters) => {
   const myQuery = and(
     equals('1', parameters['1']),
@@ -73,5 +80,7 @@ export default {
   getTransactionPrice,
   getWalletBalance,
   getTransactionStatus,
+  getTransaction,
+  getTransactionData,
   searchContainer,
 }
