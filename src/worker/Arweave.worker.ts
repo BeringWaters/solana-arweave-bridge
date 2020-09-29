@@ -8,7 +8,6 @@ import {
   MAX_TAGS_SIZE,
   TX_STATUS_POLLING_ATTEMPTS,
   TX_NUMBER_OF_CONFIRMATIONS,
-  MAX_RESPONSE_ATTEMPTS
 } from '../config';
 import { addTagsToTxs } from '../service/Arweave.tag.service';
 import arweaveAPI from '../api/Arweave.api';
@@ -18,7 +17,10 @@ const redis = new Redis();
 export const POSTING_TXS_QUEUE = 'POSTING_TXS_QUEUE';
 export const PENDING_TXS_QUEUE = 'PENDING_TXS_QUEUE';
 export const SAVED_TXS_QUEUE = 'SAVED_TXS_QUEUE';
-export const LAST_SAVED_BLOCK_KEY = 'LAST_SAVED_BLOCK_KEY';
+export const LAST_SAVED_SLOT = 'LAST_SAVED_SLOT';
+export const WALLET_BALANCE = 'WALLET_BALANCE';
+export const AR_SPENT = 'AR_SPENT';
+export const AR_SPENT_UNCONFIRMED = 'AR_SPENT_UNCONFIRMED';
 
 const postingTxsQueue = new Queue(POSTING_TXS_QUEUE,{
   defaultJobOptions: {
@@ -30,12 +32,14 @@ const pendingTxsQueueScheduler = new QueueScheduler(PENDING_TXS_QUEUE);
 const savedTxsQueue = new Queue(SAVED_TXS_QUEUE);
 
 const compressTxsData = (transactions) => {
-  return msgpack.encode(transactions);
+  const compressed = msgpack.encode(transactions);
+  const compressedString = compressed.toString('base64');
+  return compressedString;
 };
 
 const signAndPostTransaction = async (tx) => {
   await arweaveAPI.signTransaction(tx);
-  // await arweaveAPI.postTransaction(tx);
+  await arweaveAPI.postTransaction(tx);
 };
 
 const addTagsToContainer = (containerTags, txTags) => {
@@ -63,9 +67,10 @@ const getTagsSize = (tags) => {
 
 const createContainer = (blockhash, slotNumber, containerNumber) => {
   const tags = {
-    '1': slotNumber,
-    '2': blockhash,
-    '3': containerNumber,
+    '1': `${slotNumber}`,
+    '2': `${containerNumber}`,
+    '3': `${blockhash}`,
+    '4': 'testnet'
   };
 
   return {
@@ -94,21 +99,32 @@ export async function saveBlockToArweave(solanaBlock: ConfirmedBlock, slotNumber
    * BF ALLOCATION ALGORITHM
    */
   const taggedTxs = addTagsToTxs(solanaTxs);
-  const txContainers = taggedTxs.reduce((txContainers, taggedTx) => {
-    const { tags, transaction, bytes} = taggedTx;
-    let txContainerIndex = findBFContainerIndex(txContainers, bytes);
-    if (!txContainerIndex) {
-      txContainerIndex = (txContainers.push(createContainer(blockhash, slotNumber, containerNumber++)) - 1);
-    }
-    txContainers[txContainerIndex].txs.push(transaction);
-    txContainers[txContainerIndex].tags = addTagsToContainer(txContainers[txContainerIndex].tags, tags);
-    txContainers[txContainerIndex].spaceLeft -= bytes;
-  }, [createContainer(blockhash, slotNumber, containerNumber++)]);
+  try {
+    const txContainers = taggedTxs.reduce((txContainers, taggedTx) => {
+      const { tags, transaction, bytes} = taggedTx;
+      let txContainerIndex = findBFContainerIndex(txContainers, bytes);
+      if (txContainerIndex === undefined) {
+        txContainerIndex = (txContainers.push(createContainer(blockhash, slotNumber, containerNumber++)) - 1);
+      }
+      txContainers[txContainerIndex].txs.push(transaction);
+      txContainers[txContainerIndex].tags = addTagsToContainer(txContainers[txContainerIndex].tags, tags);
+      txContainers[txContainerIndex].spaceLeft -= bytes;
+      return txContainers;
+    }, [createContainer(blockhash, slotNumber, containerNumber++)]);
 
-  await Promise.all(txContainers.forEach(async (container) => {
+    const container = txContainers[0];
     container.txs = await compressTxsData(container.txs);
-    await postingTxsQueue.add(`${container.tags['1']}_${container.tags['2']}`, container);
-  }))
+
+    await Promise.all(txContainers.map(async (container) => {
+      const result = await arweaveAPI.searchContainer(container.tags);
+      if (result.length > 0) return;
+      container.txs = await compressTxsData(container.txs);
+      return (await postingTxsQueue.add(`${container.tags['1']}_${container.tags['2']}`, container));
+    }))
+  } catch (e) {
+    console.log(`Error occurred while processing slot ${slotNumber}: ${e}`);
+    return;
+  }
 }
 
 const txPostingWorker = new Worker(POSTING_TXS_QUEUE, async (job: Job) => {
@@ -116,53 +132,85 @@ const txPostingWorker = new Worker(POSTING_TXS_QUEUE, async (job: Job) => {
   const { txs, tags } = container;
   const arweaveTx = await arweaveAPI.createTransaction({data: txs});
   Object.keys(tags).forEach((tagKey) => {
-    const values = tags[tagKey];
-    values.forEach((value => arweaveTx.addTag(tagKey, value)));
+    const tagValue = tags[tagKey];
+    if (Array.isArray(tagValue)) {
+      tagValue.forEach((value => arweaveTx.addTag(tagKey, value)));
+      return;
+    }
+    arweaveTx.addTag(tagKey, tagValue)
   });
 
-  const txPrice = await arweaveAPI.getTransactionPrice(arweaveTx.data_size);
-  const balance = await arweaveAPI.getWalletBalance();
+  const arSpent = parseInt(await redis.get(AR_SPENT_UNCONFIRMED) || '0', 10);
+  const balance = parseInt(await redis.get(WALLET_BALANCE) || '0', 10);
+  const txPrice = parseInt(await arweaveAPI.getTransactionPrice(arweaveTx.data_size), 10);
 
-  if (balance < txPrice) {
+  if (balance < txPrice + arSpent) {
     console.log(`Wallet balance is not sufficient to process arweave transaction ${arweaveTx.id}.\n
-    Data size: ${arweaveTx.data_size} bytes. Price: ${txPrice} winston (${txPrice / WINSTON_TO_AR} AR)`);
+    Data size: ${arweaveTx.data_size} bytes. Price: ${txPrice} winston (${txPrice / WINSTON_TO_AR} AR)\n
+    Balance: ${balance}`);
     await postingTxsQueue.add(`${container.tags['1']}_${container.tags['2']}`, container);
     return;
   }
 
   await signAndPostTransaction(arweaveTx);
+  await redis.set(AR_SPENT_UNCONFIRMED, arSpent + txPrice);
+
   await pendingTxsQueue.add(`${container.tags['1']}_${container.tags['2']}`, {arweaveTx, container}, {
     delay: TX_STATUS_POLLING_DELAY,
-    attempts: MAX_RESPONSE_ATTEMPTS,
+    attempts: TX_STATUS_POLLING_ATTEMPTS,
+    backoff: TX_STATUS_POLLING_DELAY,
+    removeOnComplete: true,
+    removeOnFail: true,
   });
-  console.log(`Created arweave tx: ${arweaveTx.id}. Data size: ${arweaveTx.data_size} bytes. Price: ${txPrice} winston (${txPrice / WINSTON_TO_AR} AR)`);
-});
+  console.log(`Posted arweave tx: ${arweaveTx.id}. Data size: ${arweaveTx.data_size} bytes. Price: ${txPrice} winston (${txPrice / WINSTON_TO_AR} AR)`);
+}, {concurrency: 8});
 
 const txStatusPollingWorker = new Worker(PENDING_TXS_QUEUE, async (job: Job) => {
   const { data } = job;
   const { arweaveTx } = data;
-  console.log(`Check arweave transaction status: ${arweaveTx.id}`);
-  const { confirmed } = await arweaveAPI.getTransactionStatus(arweaveTx.id);
+  console.log(`Check arweave transaction status: ${arweaveTx.id}. Attempt: ${job.attemptsMade}`);
+  const { confirmed, status } = await arweaveAPI.getTransactionStatus(arweaveTx.id);
 
   if (!confirmed) {
-    throw new Error(`Error occurred while posting transaction ${arweaveTx.id} to Arweave`);
+    if (status < 200 || status >= 300) {
+      job.data.remove = true;
+      job.attemptsMade = job.opts.attempts;
+      throw new Error(`Error occurred while posting transaction ${arweaveTx.id} to Arweave`);
+    }
+    return Promise.reject(`Waiting for transaction ${arweaveTx.id} to be accepted`);
   }
 
   if (confirmed.number_of_confirmations < TX_NUMBER_OF_CONFIRMATIONS) {
-    throw new Error(`Insufficient number of confirmations for transaction ${arweaveTx.id}`);
+    return Promise.reject(`Insufficient number of confirmations for transaction ${arweaveTx.id}`);
   }
 });
 
 txStatusPollingWorker.on('completed', async (job: Job) => {
-  const { data } = job;
-  const { arweaveTx, container } = data;
-  await savedTxsQueue.add(`${container.tags['1']}_${container.tags['2']}`, arweaveTx);
+  const { data, name } = job;
+  const { arweaveTx } = data;
+
+  const arSpent = await redis.get(AR_SPENT) || '0';
+  await redis.set(AR_SPENT, parseInt(arSpent, 10) + parseInt(arweaveTx.reward, 10));
+
+  await savedTxsQueue.add(`${name}`, arweaveTx);
+  console.log(`Tx ${arweaveTx.id} succeed.`)
 });
 
 txStatusPollingWorker.on('failed', async (job: Job) => {
-  const { data } = job;
-  const { arweaveTx, container } = data;
-  await postingTxsQueue.add(`${container.tags['1']}_${container.tags['2']}`, arweaveTx);
+  const { data, name } = job;
+  const { arweaveTx, container, remove } = data;
+
+  if (job.attemptsMade >= job.opts.attempts) {
+    const arSpent = await redis.get(AR_SPENT_UNCONFIRMED) || '0';
+    await redis.set(AR_SPENT_UNCONFIRMED, parseInt(arSpent, 10) - parseInt(arweaveTx.reward, 10));
+    if (remove) {
+      console.log(`Tx ${arweaveTx.id} failed and removed from queue.`);
+      return;
+    }
+    await postingTxsQueue.add(`${name}`, container);
+    console.log(`Tx ${arweaveTx.id} failed but re-added to queue.`)
+    return;
+  }
 });
 
 const savedBlockWorker = new Worker(SAVED_TXS_QUEUE, async (job) => { // FIXME THIS WORKER WORKS NOT CORRECT. NEED TO DEBUG...
