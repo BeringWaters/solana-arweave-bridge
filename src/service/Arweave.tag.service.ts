@@ -7,43 +7,64 @@ const getObjectValue = (path, obj) =>
 const txProperties = [
   {
     path: ['message', 'header', 'numReadonlySignedAccounts'],
-    name: 'numReadonlySignedAccounts'
+    name: 'numReadonlySignedAccounts',
+    id: 'a',
   },
   {
     path: ['message', 'header', 'numReadonlyUnsignedAccounts'],
-    name: 'numReadonlyUnsignedAccounts'
+    name: 'numReadonlyUnsignedAccounts',
+    id: 'b',
   },
   {
     path: ['message', 'header', 'numRequiredSignatures'],
-    name: 'numRequiredSignatures'
+    name: 'numRequiredSignatures',
+    id: 'c',
   },
 ];
 
 const txIterableProperties = [
   {
     path: ['signatures'],
-    name: 'signature'
+    name: 'signature',
+    id: 'd',
   },
   {
     path: ['message', 'accountKeys'],
-    name: 'accountKey'
+    name: 'accountKey',
+    id: 'e',
   },
   {
     path: ['message', 'instructions'],
     subPath: ['programIdIndex'],
-    name: 'programIdIndex'
+    name: 'programIdIndex',
+    id: 'f',
   },
 ];
 
-export const getTxsTags = (transactions: {
+export const addTagsToTxs = (transactions: {
   transaction: Transaction;
   meta: ConfirmedTransactionMeta | null;
 }[]) => {
-  const tagsList = transactions.reduce((agg: String[], { transaction }) => {
+  return transactions.reduce((agg, { transaction }) => {
+    const tags = {
+      ...txProperties.reduce((agg, item) => {
+        return {
+          ...agg,
+          [`${item.id}`]: [],
+        }
+      }, {}),
+      ...txIterableProperties.reduce((agg, item) => {
+        return {
+          ...agg,
+          [`${item.id}`]: [],
+        }
+      }, {}),
+    };
+
     txProperties.forEach((property) => {
       const propertyValue = getObjectValue(property.path, transaction);
       if (propertyValue === null) return;
-      agg.push(`${property.name}_${propertyValue}`);
+      tags[`${property.id}`].push(`${propertyValue}`);
     });
 
     txIterableProperties.forEach((property) => {
@@ -51,12 +72,17 @@ export const getTxsTags = (transactions: {
       propertyArray.forEach((propertyArrayValue) => {
         const propertyValue = property.subPath ? getObjectValue(property.subPath, propertyArrayValue) : propertyArrayValue;
         if (propertyValue === null) return;
-        agg.push(`${property.name}_${propertyValue}`);
+        tags[`${property.id}`].push(`${propertyValue}`);
       });
     });
 
-    return agg;
-  }, []);
+    const bytes = Object.keys(tags).reduce((agg: number, val) => {
+      tags[val].forEach((el) => {
+        agg += el.length + 1;
+      });
+      return agg;
+    }, 0);
 
-  return [...new Set(tagsList)];
+    return [...agg, { tags, transaction, bytes }];
+  }, []);
 };

@@ -10,7 +10,7 @@ axios.interceptors.response.use((response) => {
 }, function (error) {
   // Any status codes that falls outside the range of 2xx cause this function to trigger
   const { response, config: originalRequest } = error;
-  if (response.status === 429 && (!originalRequest.retry || originalRequest.retry <= MAX_RESPONSE_ATTEMPTS)) {
+  if (response && response.status === 429 && (!originalRequest.retry || originalRequest.retry <= MAX_RESPONSE_ATTEMPTS)) {
     originalRequest.retry = originalRequest.retry ? originalRequest.retry + 1 : 1;
     return (new Promise(resolve => setTimeout(resolve, originalRequest.retry * 1000)))
       .then(() => axios(originalRequest));
@@ -37,7 +37,7 @@ export async function getFirstSlot(id: number = 1) {
       method: `getFirstAvailableBlock`,
     });
 
-  return data;
+  return data.result;
 }
 
 export async function getCurrentSlot(id: number = 1) {
@@ -48,7 +48,7 @@ export async function getCurrentSlot(id: number = 1) {
       method: `getSlot`,
     });
 
-  return data;
+  return data.result;
 }
 
 export async function getConfirmedBlock(index: number, id?: number) {
@@ -63,7 +63,7 @@ export async function getConfirmedBlock(index: number, id?: number) {
   return data;
 }
 
-export const getConfirmedSlots = async (start: number, end: number, id?: number) => {
+export const getConfirmedBlocks = async (start: number, end: number, id?: number) => {
   const { data } = await axios
     .post(SOLANA_OPTIONS.url, {
       jsonrpc: SOLANA_OPTIONS.jsonrpc,

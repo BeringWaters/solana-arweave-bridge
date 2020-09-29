@@ -12,14 +12,22 @@ export const ARWEAVE_OPTIONS = {
 };
 
 export const SOLANA_OPTIONS = {
-    url: process.env.SOLANA_NODE_URL || 'https://devnet.solana.com',
+    url: 'https://api.mainnet-beta.solana.com',
     jsonrpc: '2.0',
 };
 
 export const ARWEAVE_ADDRESS = 'QkbQ9Cq7x6I7Jnmw5mePKDSEVavTMvABBPMJY6nGZLY';
 
-export const MAX_SLOT_CHUNK_SIZE = 500000;
+export const MAX_SLOT_CHUNK_SIZE = 100000;
 
 export const WINSTON_TO_AR = 10e12;
 
-export const MAX_RESPONSE_ATTEMPTS = process.env.MAX_RESPONSE_ATTEMPTS || 5;
+export const MAX_TAGS_SIZE = 2048;
+
+export const MAX_RESPONSE_ATTEMPTS = 5;
+
+export const TX_STATUS_POLLING_DELAY = 30000;
+
+export const TX_STATUS_POLLING_ATTEMPTS = 960;
+
+export const TX_NUMBER_OF_CONFIRMATIONS = 1;
