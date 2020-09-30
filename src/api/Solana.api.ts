@@ -74,3 +74,11 @@ export const getConfirmedBlocks = async (start: number, end: number, id?: number
 
   return data;
 };
+
+export default {
+  getGenesisHash,
+  getFirstSlot,
+  getCurrentSlot,
+  getConfirmedBlock,
+  getConfirmedBlocks,
+}

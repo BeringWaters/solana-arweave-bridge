@@ -1,45 +1,60 @@
 import { ConfirmedTransactionMeta, Transaction } from '@solana/web3.js';
+import { TAG_ALIAS, NETWORK_ALIAS } from '../constants';
 
-const getObjectValue = (path, obj) =>
+export const getObjectValue = (path, obj) =>
   path.reduce((xs, x) =>
     (xs !== undefined && xs[x] !== undefined) ? xs[x] : null, obj);
 
-const txProperties = [
+export const txTags = [
   {
     path: ['message', 'header', 'numReadonlySignedAccounts'],
     name: 'numReadonlySignedAccounts',
-    id: 'a',
   },
   {
     path: ['message', 'header', 'numReadonlyUnsignedAccounts'],
     name: 'numReadonlyUnsignedAccounts',
-    id: 'b',
   },
   {
     path: ['message', 'header', 'numRequiredSignatures'],
     name: 'numRequiredSignatures',
-    id: 'c',
   },
 ];
 
-const txIterableProperties = [
+export const txIterableTags = [
   {
     path: ['signatures'],
     name: 'signature',
-    id: 'd',
   },
   {
     path: ['message', 'accountKeys'],
     name: 'accountKey',
-    id: 'e',
   },
   {
     path: ['message', 'instructions'],
     subPath: ['programIdIndex'],
     name: 'programIdIndex',
-    id: 'f',
   },
 ];
+
+export const getTagAlias = (tagName) => {
+  return TAG_ALIAS[tagName] || tagName;
+};
+
+export const getNetworkAlias = (networkUrl) => {
+  return NETWORK_ALIAS[networkUrl] || networkUrl;
+};
+
+export const getTagsSize = (tags) => {
+  return Object.keys(tags).reduce((tagBytes: number, tag) => {
+    const tagValue = tags[tag];
+    if (Array.isArray(tagValue)) {
+      return tagValue.reduce((bytes: number, value) => {
+        return bytes + value.length + 1;
+      }, tagBytes)
+    }
+    return tagBytes + tagValue.length + 1;
+  }, 0);
+};
 
 export const addTagsToTxs = (transactions: {
   transaction: Transaction;
@@ -47,41 +62,36 @@ export const addTagsToTxs = (transactions: {
 }[]) => {
   return transactions.reduce((agg, { transaction }) => {
     const tags = {
-      ...txProperties.reduce((agg, item) => {
+      ...txTags.reduce((agg, tag) => {
         return {
           ...agg,
-          [`${item.id}`]: [],
+          [`${getTagAlias(tag.name)}`]: [],
         }
       }, {}),
-      ...txIterableProperties.reduce((agg, item) => {
+      ...txIterableTags.reduce((agg, tag) => {
         return {
           ...agg,
-          [`${item.id}`]: [],
+          [`${getTagAlias(tag.name)}`]: [],
         }
       }, {}),
     };
 
-    txProperties.forEach((property) => {
-      const propertyValue = getObjectValue(property.path, transaction);
-      if (propertyValue === null) return;
-      tags[`${property.id}`].push(`${propertyValue}`);
+    txTags.forEach((tag) => {
+      const value = getObjectValue(tag.path, transaction);
+      if (value === null) return;
+      tags[`${getTagAlias(tag.name)}`].push(`${value}`);
     });
 
-    txIterableProperties.forEach((property) => {
-      const propertyArray = getObjectValue(property.path, transaction) || [];
-      propertyArray.forEach((propertyArrayValue) => {
-        const propertyValue = property.subPath ? getObjectValue(property.subPath, propertyArrayValue) : propertyArrayValue;
-        if (propertyValue === null) return;
-        tags[`${property.id}`].push(`${propertyValue}`);
+    txIterableTags.forEach((tag) => {
+      const valuesIterable = getObjectValue(tag.path, transaction) || [];
+      valuesIterable.forEach((valueIterable) => {
+        const value = tag.subPath ? getObjectValue(tag.subPath, valueIterable) : valueIterable;
+        if (value === null) return;
+        tags[`${getTagAlias(tag.name)}`].push(`${value}`);
       });
     });
 
-    const bytes = Object.keys(tags).reduce((agg: number, val) => {
-      tags[val].forEach((el) => {
-        agg += el.length + 1;
-      });
-      return agg;
-    }, 0);
+    const bytes = getTagsSize(tags);
 
     return [...agg, { tags, transaction, bytes }];
   }, []);
