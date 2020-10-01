@@ -42,8 +42,8 @@ export const start = async () => {
   console.log('Blocks fetching started...');
 
   const livestream = OPTIONS.livestream && !(OPTIONS.lastSlot === undefined);
-  const firstSlot = parseInt(OPTIONS.firstSlot,10) || await solanaAPI.getFirstSlot();
-  const lastSlot = parseInt(OPTIONS.lastSlot,  10) || await solanaAPI.getCurrentSlot();
+  const firstSlot = parseInt(OPTIONS.firstSlot,10) || await solanaAPI.getCurrentSlot();
+  const lastSlot = parseInt(OPTIONS.lastSlot,  10) || firstSlot;
 
   /**
    * Get all confirmed Solana slots
@@ -87,3 +87,4 @@ export const start = async () => {
     await fetchingTxsQueue.add(`${slot}`, slot)
   }
 };
+start()

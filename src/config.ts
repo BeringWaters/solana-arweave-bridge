@@ -2,8 +2,8 @@ import * as dotenv from 'dotenv'
 dotenv.config({ path: `.env` });
 
 export let OPTIONS = {
-    firstSlot: '38168751',
-    lastSlot: '38168751',
+    firstSlot: undefined,
+    lastSlot: undefined,
     livestream: false,
     database: process.env.DATABASE || 't',
     concurrency: parseInt(process.env.CONCURRENCY, 10) || 4,

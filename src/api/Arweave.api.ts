@@ -1,5 +1,6 @@
 import { and, or, equals } from 'arql-ops';
 import { arweave, wallet } from '../service/Arweave.service';
+import { getTagAlias } from '../service/Arweave.tag.service';
 
 export const createTransaction = async (data) => {
   const arweaveTx = await arweave.createTransaction(data, wallet.key);
@@ -53,11 +54,11 @@ export const getTransactionData = async (id) => {
 
 export const searchContainer = async (parameters) => {
   const myQuery = and(
-    equals('1', parameters['1']),
-    equals('2', parameters['2']),
-    equals('3', parameters['3']),
-    equals('4', parameters['4']),
-    equals('5', parameters['5']),
+    equals(getTagAlias('slot'), parameters[getTagAlias('slot')]),
+    equals(getTagAlias('container'), parameters[getTagAlias('container')]),
+    equals(getTagAlias('blockhash'), parameters[getTagAlias('blockhash')]),
+    equals(getTagAlias('network'), parameters[getTagAlias('network')]),
+    equals(getTagAlias('database'), parameters[getTagAlias('database')]),
   );
 
   const results = await arweave.arql(myQuery);
