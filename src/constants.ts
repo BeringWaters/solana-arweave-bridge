@@ -37,15 +37,15 @@ export const BLOCK_TAGS = [
 ];
 
 export const TAG_ALIAS = {
-  'slot': '1',
-  'container': '2',
-  'blockhash': '3',
-  'network': '4',
-  'database': '5',
-  'numReadonlySignedAccounts': 'a',
-  'numReadonlyUnsignedAccounts': 'b',
-  'numRequiredSignatures': 'c',
-  'signature': 'd',
-  'accountKey': 'e',
-  'programIdIndex': 'f',
+  slot: '1',
+  container: '2',
+  blockhash: '3',
+  network: '4',
+  database: '5',
+  numReadonlySignedAccounts: 'a',
+  numReadonlyUnsignedAccounts: 'b',
+  numRequiredSignatures: 'c',
+  signature: 'd',
+  accountKey: 'e',
+  programIdIndex: 'f',
 };

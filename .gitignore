@@ -17,3 +17,4 @@ config/*
 
 .idea/*
 .DS_Store
+/dist/
