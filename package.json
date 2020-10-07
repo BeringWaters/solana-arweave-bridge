@@ -12,6 +12,7 @@
     "start": "yarn build && node -e 'require(\"./dist/solanaTransactions.js\").start()'",
     "start:dev": "ts-node -e 'require(\"./src/solanaTransactions.ts\").start()'",
     "build": "tsc --outDir dist",
+    "lint": "eslint src/** --no-error-on-unmatched-pattern --fix",
     "test": "npm run build && mocha dist/test"
   },
   "dependencies": {
@@ -30,6 +31,12 @@
     "typescript": "^4.0.2"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.4.0",
+    "@typescript-eslint/parser": "^4.4.0",
+    "eslint": "^7.10.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-import-resolver-typescript": "^2.3.0",
+    "eslint-plugin-import": "^2.22.1",
     "ts-node": "^9.0.0"
   }
 }
