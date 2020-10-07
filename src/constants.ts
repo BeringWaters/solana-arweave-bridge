@@ -14,6 +14,28 @@ export const NETWORK_ALIAS = {
   'http://api.mainnet-beta.solana.com': '2',
 };
 
+export const TAGS = [
+  'slot',
+  'container',
+  'blockhash',
+  'network',
+  'database',
+  'numReadonlySignedAccounts',
+  'numReadonlyUnsignedAccounts',
+  'numRequiredSignatures',
+  'signature',
+  'accountKey',
+  'programIdIndex',
+];
+
+export const BLOCK_TAGS = [
+  'slot',
+  'container',
+  'blockhash',
+  'network',
+  'database',
+];
+
 export const TAG_ALIAS = {
   'slot': '1',
   'container': '2',

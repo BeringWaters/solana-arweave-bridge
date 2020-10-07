@@ -3,15 +3,15 @@ import { arweave } from './Arweave.service';
 import { getTransaction, getTransactionData } from '../api/Arweave.api';
 import { decompressData } from './Arweave.compression.service';
 import { getTagAlias, getObjectValue, txTags, txIterableTags } from './Arweave.tag.service';
+import { TAGS, BLOCK_TAGS } from '../constants';
 
 export const searchByParameter = async (name, value) => {
-  const txTag = txTags.find((tagObj) => tagObj.name === name);
-  if (!txTag) {
-    throw new Error('Search parameter not found')
+  if (!TAGS.includes(name)) {
+    throw new Error('Tag name not found')
   }
 
   const myQuery = and(
-    equals(getTagAlias(name), value),
+      equals(getTagAlias(name), value),
   );
 
   const txIds = await arweave.arql(myQuery);
@@ -23,10 +23,18 @@ export const searchByParameter = async (name, value) => {
     return txArray;
   }));
 
-  const solanaTxs = txArrays.reduce((txs: Array<any>, txArray: any) => {
+  const solanaTxs = txArrays.slice(1).reduce((txs: Array<any>, txArray: any) => {
     return [...txs, ...txArray];
   }, []);
 
+  if (BLOCK_TAGS.includes(name)) {
+    return solanaTxs;
+  }
+
+  const txTag = txTags.find((tagObj) => tagObj.name === name);
+  if (!txTag) {
+    throw new Error('Search parameter not found')
+  }
   const txsFound = solanaTxs.filter((tx: any) => {
     const txValue = getObjectValue(txTag.path, tx);
     return txValue === value;
