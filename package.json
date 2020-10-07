@@ -1,13 +1,12 @@
 {
   "name": "solana_arweave_bridge",
   "version": "0.0.1",
-  "description": "This project is a bridge to connect Solana ledger data to Arweave permanent storage",
+  "description": "This utility is a bridge to connect Solana ledger data to Arweave permanent storage",
   "bin": {
     "solana-arweave-bridge": "./cli.js"
   },
   "main": "./dist/index.js",
-  "repository": "git@github.com:exyte/solana_arweave_bridge.git",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "scripts": {
     "start": "yarn build && node -e 'require(\"./dist/solanaTransactions.js\").start()'",
     "start:dev": "ts-node -e 'require(\"./src/solanaTransactions.ts\").start()'",
