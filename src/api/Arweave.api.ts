@@ -1,18 +1,6 @@
 import { and, or, equals } from 'arql-ops';
-import { ARWEAVE_OPTIONS } from '../config';
-
-const Arweave = require('arweave');
-
-export const arweave = Arweave.init(ARWEAVE_OPTIONS);
-
-const wallet = {
-  'key': undefined,
-  'address': undefined,
-};
-(async () => {
-  wallet.key = require(`../../${ARWEAVE_OPTIONS.keyPath}`);
-  wallet.address = await arweave.wallets.jwkToAddress(wallet.key);
-})();
+import { arweave, wallet } from '../service/Arweave.service';
+import { getTagAlias } from '../service/Arweave.tag.service';
 
 export const createTransaction = async (data) => {
   const arweaveTx = await arweave.createTransaction(data, wallet.key);
@@ -20,7 +8,6 @@ export const createTransaction = async (data) => {
 };
 
 export const signTransaction = async (tx) => {
-  return arweave.transactions.sign(tx, wallet.key);
   return arweave.transactions.sign(tx, wallet.key);
 };
 
@@ -30,7 +17,6 @@ export const postTransaction = async (tx, chunkUploading = true) => {
 
     while (!uploader.isComplete) {
       await uploader.uploadChunk();
-      console.log(`tx: ${tx.id}: ${uploader.pctComplete}% complete, ${uploader.uploadedChunks}/${uploader.totalChunks}`);
     }
   }
   return arweave.transactions.post(tx);
@@ -52,21 +38,27 @@ export const getTransactionStatus = async (id) => {
 };
 
 export const getTransaction = async (id) => {
-  const tx = await arweave.transactions.get(id);
-  return tx;
+  try {
+    const tx = await arweave.transactions.get(id);
+    return tx;
+  } catch (e) {
+    console.log(`error: ${e}`);
+    return {};
+  }
 };
 
 export const getTransactionData = async (id) => {
-  const txData = await arweave.transactions.getData(id);
+  const txData = await arweave.transactions.getData(id, {decode: true});
   return txData;
 };
 
 export const searchContainer = async (parameters) => {
   const myQuery = and(
-    equals('1', parameters['1']),
-    equals('2', parameters['2']),
-    equals('3', parameters['3']),
-    equals('4', parameters['4']),
+    equals(getTagAlias('slot'), parameters[getTagAlias('slot')]),
+    equals(getTagAlias('container'), parameters[getTagAlias('container')]),
+    equals(getTagAlias('blockhash'), parameters[getTagAlias('blockhash')]),
+    equals(getTagAlias('network'), parameters[getTagAlias('network')]),
+    equals(getTagAlias('database'), parameters[getTagAlias('database')]),
   );
 
   const results = await arweave.arql(myQuery);

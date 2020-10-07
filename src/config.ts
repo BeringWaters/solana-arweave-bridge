@@ -1,6 +1,25 @@
 import * as dotenv from 'dotenv'
-
 dotenv.config({ path: `.env` });
+
+export let OPTIONS = {
+    firstSlot: undefined,
+    lastSlot: undefined,
+    livestream: false,
+    database: process.env.DATABASE || 't',
+    concurrency: parseInt(process.env.CONCURRENCY, 10) || 4,
+    local: false,
+    compressed: false,
+    verify: true,
+    benchmark: false,
+    keyPath: process.env.ARWEAVE_KEY_PATH,
+};
+
+export const updateOptions = (params = {}) => {
+    Object.keys(params).forEach((key) => {
+        if (params[key] === undefined) return;
+        OPTIONS[key] = params[key];
+    })
+};
 
 export const ARWEAVE_OPTIONS = {
     host: 'arweave.net',
@@ -8,26 +27,28 @@ export const ARWEAVE_OPTIONS = {
     protocol: 'https',
     timeout: 20000,
     logging: false,
-    keyPath: process.env.KEY_PATH,
 };
 
-export const SOLANA_OPTIONS = {
-    url: 'https://api.mainnet-beta.solana.com',
-    jsonrpc: '2.0',
+export let SOLANA_OPTIONS = {
+    url: process.env.SOLANA_NODE_URL || 'https://testnet.solana.com',
+    jsonrpc: process.env.SOLANA_RPC || '2.0',
 };
 
-export const ARWEAVE_ADDRESS = 'QkbQ9Cq7x6I7Jnmw5mePKDSEVavTMvABBPMJY6nGZLY';
+export const updateSolanaOptions = (params = {}) => {
+    Object.keys(params).forEach((key) => {
+        if (params[key] === undefined) return;
+        SOLANA_OPTIONS[key] = params[key];
+    })
+};
 
-export const MAX_SLOT_CHUNK_SIZE = 100000;
+export const MAX_SLOT_CHUNK_SIZE = parseInt(process.env.MAX_SLOT_CHUNK_SIZE, 10) || 100000;
 
-export const WINSTON_TO_AR = 10e12;
+export const MAX_RESPONSE_ATTEMPTS = parseInt(process.env.MAX_RESPONSE_ATTEMPTS, 10) || 5;
 
-export const MAX_TAGS_SIZE = 2048;
+export const TX_STATUS_POLLING_DELAY = parseInt(process.env.TX_STATUS_POLLING_DELAY, 10) || 1000;
 
-export const MAX_RESPONSE_ATTEMPTS = 5;
+export const TX_STATUS_POLLING_ATTEMPTS = parseInt(process.env.TX_STATUS_POLLING_ATTEMPTS, 10) || 960;
 
-export const TX_STATUS_POLLING_DELAY = 30000;
+export const TX_NUMBER_OF_CONFIRMATIONS = parseInt(process.env.TX_NUMBER_OF_CONFIRMATIONS, 10) || 1;
 
-export const TX_STATUS_POLLING_ATTEMPTS = 960;
-
-export const TX_NUMBER_OF_CONFIRMATIONS = 1;
+export const CONCURRENCY = parseInt(process.env.CONCURRENCY, 10) || 4;
