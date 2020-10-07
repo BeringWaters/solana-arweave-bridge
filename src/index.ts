@@ -7,6 +7,7 @@ import { LAST_SAVED_SLOT } from './service/Queue.service';
 import { fetchingTxsQueue, WALLET_BALANCE, walletBalanceQueue } from './service/Queue.service';
 import { txPostingWorker } from './worker/Arweave.posting.worker';
 import { txFetchingWorker } from './worker/Solana.fetching.worker';
+import { txStatusPollingWorker } from './worker/Arweave.polling.worker';
 
 const fetchSlots = async (first, last) => {
   console.log('Fetching confirmed blocks:');
@@ -80,6 +81,7 @@ export const start = async () => {
 
   txFetchingWorker.opts.concurrency = concurrency;
   txPostingWorker.opts.concurrency = concurrency;
+  txStatusPollingWorker.opts.concurrency = concurrency;
 
   const length = confirmedSlots.length;
   for (let i = 0; i < (concurrency * 10) && i < length; ++i) {
