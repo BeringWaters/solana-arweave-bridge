@@ -1,10 +1,12 @@
-import {Job, Worker} from 'bullmq';
-import { AR_SPENT, AR_SPENT_UNCONFIRMED, PENDING_TXS_QUEUE } from '../service/Queue.service';
+import { Job, Worker } from 'bullmq';
+import {
+  AR_SPENT, AR_SPENT_UNCONFIRMED, PENDING_TXS_QUEUE, postingTxsQueue, savedTxsQueue,
+} from '../service/Queue.service';
 import arweaveAPI from '../api/Arweave.api';
 import { TX_NUMBER_OF_CONFIRMATIONS } from '../config';
 import { redis } from '../service/Redis.service';
-import { postingTxsQueue, savedTxsQueue } from '../service/Queue.service';
 
+// eslint-disable-next-line consistent-return
 export const txStatusPollingWorker = new Worker(PENDING_TXS_QUEUE, async (job: Job) => {
   const { data } = job;
   const { arweaveTx } = data;
@@ -33,7 +35,7 @@ txStatusPollingWorker.on('completed', async (job: Job) => {
   await redis.set(AR_SPENT, parseInt(arSpent, 10) + parseInt(arweaveTx.reward, 10));
 
   await savedTxsQueue.add(`${name}`, arweaveTx);
-  console.log(`Tx ${arweaveTx.id} succeed.`)
+  console.log(`Tx ${arweaveTx.id} succeed.`);
 });
 
 txStatusPollingWorker.on('failed', async (job: Job) => {
@@ -49,6 +51,5 @@ txStatusPollingWorker.on('failed', async (job: Job) => {
     }
     await postingTxsQueue.add(`${name}`, container);
     console.log(`Tx ${arweaveTx.id} failed but re-added to queue.`);
-    return;
   }
 });

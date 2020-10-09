@@ -11,6 +11,7 @@ import {
 import { txPostingWorker } from './worker/Arweave.posting.worker';
 import { txFetchingWorker } from './worker/Solana.fetching.worker';
 import { txStatusPollingWorker } from './worker/Arweave.polling.worker';
+import { walletBalanceWorker } from './worker/WalletBalance.worker';
 
 const fetchSlots = async (first, last) => {
   console.log('Fetching confirmed blocks:');
@@ -88,6 +89,7 @@ export const start = async () => {
   txFetchingWorker.opts.concurrency = concurrency;
   txPostingWorker.opts.concurrency = concurrency;
   txStatusPollingWorker.opts.concurrency = concurrency;
+  walletBalanceWorker.opts.concurrency = 1;
 
   const { length } = confirmedSlots;
   // eslint-disable-next-line no-plusplus
@@ -96,3 +98,5 @@ export const start = async () => {
     await fetchingTxsQueue.add(`${slot}`, slot);
   }
 };
+
+start();
