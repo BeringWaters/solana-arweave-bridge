@@ -98,5 +98,3 @@ export const start = async () => {
     await fetchingTxsQueue.add(`${slot}`, slot);
   }
 };
-
-start();
