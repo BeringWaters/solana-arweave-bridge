@@ -13,7 +13,8 @@
     "start:dev": "ts-node -e 'require(\"./src/solanaTransactions.ts\").start()'",
     "build": "tsc --outDir dist",
     "lint": "eslint src/** --no-error-on-unmatched-pattern --fix",
-    "test": "npm run build && mocha dist/test"
+    "test": "mocha --exit --require ts-node/register test/**/*.ts",
+    "coverage": "nyc npm run test"
   },
   "dependencies": {
     "@solana/web3.js": "^0.71.6",
@@ -31,12 +32,18 @@
     "typescript": "^4.0.2"
   },
   "devDependencies": {
+    "@types/chai": "^4.2.13",
+    "@types/mocha": "^8.0.3",
+    "@types/node": "^14.11.7",
     "@typescript-eslint/eslint-plugin": "^4.4.0",
     "@typescript-eslint/parser": "^4.4.0",
+    "chai": "4.2.0",
     "eslint": "^7.10.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-import-resolver-typescript": "^2.3.0",
     "eslint-plugin-import": "^2.22.1",
+    "mocha": "6.2.0",
+    "nyc": "14.1.1",
     "ts-node": "^9.0.0"
   }
 }

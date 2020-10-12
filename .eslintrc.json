@@ -1,7 +1,8 @@
 {
     "env": {
         "es6": true,
-        "node": true
+        "node": true,
+        "mocha": true
     },
     "extends": [
         "airbnb-base",
@@ -20,6 +21,10 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "import/extensions": "off"
+        "import/extensions": "off",
+        "import/no-named-as-default-member": "off",
+        "import/prefer-default-export": "off",
+        "no-param-reassign": "off",
+        "prefer-promise-reject-errors": "off"
     }
 }
