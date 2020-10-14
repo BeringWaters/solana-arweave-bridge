@@ -6,7 +6,7 @@ export const MAX_SLOT_CHUNK_SIZE = parseInt(process.env.MAX_SLOT_CHUNK_SIZE, 10)
 
 export const MAX_RESPONSE_ATTEMPTS = parseInt(process.env.MAX_RESPONSE_ATTEMPTS, 10) || 5;
 
-export const TX_STATUS_POLLING_DELAY = parseInt(process.env.TX_STATUS_POLLING_DELAY, 10) || 1000;
+export const TX_STATUS_POLLING_DELAY = parseInt(process.env.TX_STATUS_POLLING_DELAY, 10) || 15000;
 
 export const TX_STATUS_POLLING_ATTEMPTS = parseInt(process.env.TX_STATUS_POLLING_ATTEMPTS, 10) || 960;
 

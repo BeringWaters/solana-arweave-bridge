@@ -17,8 +17,8 @@ solanaArweaveBridge
     .option('--key [key]', 'Path to arweave key file')
     .option('--network [network]', 'Solana node url')
     .option('--rpc [rpc]', 'Solana rpc version')
-    .option('--tagName [tagName]')
-    .option('--tagValue [tagValue]');
+    .option('--tagname [tagname]')
+    .option('--tagvalue [tagvalue]');
 
 solanaArweaveBridge
     .command('stream')
@@ -64,12 +64,12 @@ solanaArweaveBridge
     .description('Search transactions by tag')
     .action(async () => {
         const {
-            tagName,
-            tagValue,
+            tagname,
+            tagvalue,
         } = solanaArweaveBridge;
 
         try {
-            const result = await search(tagName, tagValue);
+            const result = await search(tagname, tagvalue);
             if (result.length === 0) {
                 console.log('Nothing was found');
                 return;

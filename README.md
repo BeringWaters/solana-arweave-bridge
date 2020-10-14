@@ -13,6 +13,8 @@ yarn install
 yarn build
 ```
 
+* Install and start Redis server
+
 ## Usage
 ### CLI
 * Register CLI application:

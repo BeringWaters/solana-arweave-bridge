@@ -34,7 +34,7 @@ export const search = async (name, value) => {
     return txArray;
   }));
 
-  const solanaTxs = txArrays.slice(1).reduce((txs: Array<any>, txArray: any) => {
+  const solanaTxs = txArrays.reduce((txs: Array<any>, txArray: any) => {
     return [...txs, ...txArray];
   }, []);
 
