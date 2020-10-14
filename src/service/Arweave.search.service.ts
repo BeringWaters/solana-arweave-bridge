@@ -1,24 +1,35 @@
-import { and, or, equals } from 'arql-ops';
+import { equals } from 'arql-ops';
 import { arweave } from './Arweave.service';
-import { getTransaction, getTransactionData } from '../api/Arweave.api';
+import { getTransactionData } from '../api/Arweave.api';
 import { decompressData } from './Arweave.compression.service';
-import { getTagAlias, getObjectValue, txTags, txIterableTags } from './Arweave.tag.service';
-import { TAGS, BLOCK_TAGS } from '../constants';
+import { getObjectValue } from './Arweave.tag.service';
+import { TX_TAGS, BLOCK_TAGS } from '../constants';
 
-export const searchByParameter = async (name, value) => {
-  if (!TAGS.includes(name)) {
-    throw new Error('Tag name not found')
+const txTagsNames = Object.keys(TX_TAGS);
+const blockTagsNames = Object.keys(BLOCK_TAGS);
+
+const getTagAlias = (name) => {
+  if (txTagsNames.includes(name)) {
+    return TX_TAGS[name].alias;
   }
+  if (blockTagsNames.includes(name)) {
+    return BLOCK_TAGS[name].alias;
+  }
+  return name;
+};
 
-  const myQuery = and(
-      equals(getTagAlias(name), value),
-  );
+export const search = async (name, value) => {
+  const alias = getTagAlias(name);
+  const query = equals(alias, value);
 
-  const txIds = await arweave.arql(myQuery);
+  const txIds = await arweave.arql(query);
+
+  if (txIds.length === 0) {
+    return [];
+  }
 
   const txArrays: Array<any> = await Promise.all(txIds.map(async (txId) => {
     const data = await getTransactionData(txId);
-    // const data = tx.data || await getTransactionData(txId);
     const txArray = await decompressData(data);
     return txArray;
   }));
@@ -27,48 +38,15 @@ export const searchByParameter = async (name, value) => {
     return [...txs, ...txArray];
   }, []);
 
-  if (BLOCK_TAGS.includes(name)) {
+  if (blockTagsNames.includes(name) || !txTagsNames.includes(name)) {
     return solanaTxs;
   }
 
-  const txTag = txTags.find((tagObj) => tagObj.name === name);
-  if (!txTag) {
-    throw new Error('Search parameter not found')
-  }
+  const txTag = TX_TAGS[name];
+
   const txsFound = solanaTxs.filter((tx: any) => {
     const txValue = getObjectValue(txTag.path, tx);
     return txValue === value;
-  });
-
-  return txsFound;
-};
-
-export const searchByIterableParameter = async (name, value) => {
-  let txTag = txIterableTags.find((tagObj) => tagObj.name === name);
-  if (!txTag) {
-    throw new Error('Search parameter not found')
-  }
-
-  const myQuery = and(
-    equals(getTagAlias(name), value),
-  );
-
-  const txIds = await arweave.arql(myQuery);
-
-  const txArrays: Array<any> = await Promise.all(txIds.map(async (txId) => {
-    const data = await getTransactionData(txId);
-    // const data = tx.data || await getTransactionData(txId);
-    const txArray = await decompressData(data);
-    return txArray;
-  }));
-
-  const solanaTxs = txArrays.reduce((txs: Array<any>, txArray: any) => {
-    return [...txs, ...txArray];
-  }, []);
-
-  const txsFound = solanaTxs.filter((tx: any) => {
-    const txValue = getObjectValue(txTag.path, tx);
-    return txValue.includes(value);
   });
 
   return txsFound;

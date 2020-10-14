@@ -1,24 +1,32 @@
-import { MAX_TAGS_SIZE } from '../constants';
-import { addTagsToTxs, getTagsSize, getTagAlias, getNetworkAlias } from './Arweave.tag.service';
+import { MAX_TAGS_SIZE, BLOCK_TAGS, SOLANA_NETWORKS } from '../constants';
+import { addTagsToTxs, getTagsSize } from './Arweave.tag.service';
 import { SOLANA_OPTIONS, OPTIONS } from '../config';
 
 /**
  * Best Fit Algorithm Service
  */
 
+const getNetworkAlias = (networkUrl) => {
+  const network = SOLANA_NETWORKS[networkUrl];
+  if (network) {
+    return network.alias;
+  }
+  return networkUrl;
+};
+
 const createContainer = (blockhash, slotNumber, containerNumber) => {
-  const tags = {
-    [`${getTagAlias('slot')}`]: `${slotNumber}`,
-    [`${getTagAlias('container')}`]: `${containerNumber}`,
-    [`${getTagAlias('blockhash')}`]: `${blockhash}`,
-    [`${getTagAlias('network')}`]: `${getNetworkAlias(SOLANA_OPTIONS.url)}`,
-    [`${getTagAlias('database')}`]: `${OPTIONS.database}`,
+  const blockTags = {
+    [`${BLOCK_TAGS['slot'].alias}`]: `${slotNumber}`,
+    [`${BLOCK_TAGS['container'].alias}`]: `${containerNumber}`,
+    [`${BLOCK_TAGS['blockhash'].alias}`]: `${blockhash}`,
+    [`${BLOCK_TAGS['network'].alias}`]: `${getNetworkAlias(SOLANA_OPTIONS.url)}`,
+    [`${BLOCK_TAGS['database'].alias}`]: `${OPTIONS.database}`,
   };
 
   return {
     txs: [],
-    tags,
-    spaceLeft: MAX_TAGS_SIZE - getTagsSize(tags),
+    tags: blockTags,
+    spaceLeft: MAX_TAGS_SIZE - getTagsSize(blockTags),
   }
 };
 
