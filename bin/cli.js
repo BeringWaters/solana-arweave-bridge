@@ -22,7 +22,7 @@ solanaArweaveBridge
 
 solanaArweaveBridge
     .command('stream')
-    .description('')
+    .description('Start the bridge with specified options')
     .action(async () => {
         const {
             startslot,
