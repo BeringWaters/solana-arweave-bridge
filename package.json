@@ -1,15 +1,13 @@
 {
-  "name": "solana_arweave_bridge",
+  "name": "solana-arweave-bridge",
   "version": "0.0.1",
   "description": "This utility is a bridge to connect Solana ledger data to Arweave permanent storage",
   "bin": {
-    "solana-arweave-bridge": "./cli.js"
+    "solana-arweave-bridge": "./bin/cli.js"
   },
   "main": "./dist/index.js",
   "license": "Apache-2.0",
   "scripts": {
-    "start": "yarn build && node -e 'require(\"./dist/solanaTransactions.js\").start()'",
-    "start:dev": "ts-node -e 'require(\"./src/solanaTransactions.ts\").start()'",
     "build": "tsc --outDir dist",
     "lint": "eslint src/** --no-error-on-unmatched-pattern --fix",
     "test": "mocha --exit --require ts-node/register test/**/*.ts",
