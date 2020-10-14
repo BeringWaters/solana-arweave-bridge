@@ -11,6 +11,6 @@ export const wallet = {
 };
 
 (async () => {
-  wallet.key = JSON.parse(read(`${OPTIONS.keyPath}`));
+  wallet.key = JSON.parse(read(`${OPTIONS.key}`));
   wallet.address = await arweave.wallets.jwkToAddress(wallet.key);
 })();

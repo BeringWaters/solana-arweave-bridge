@@ -2,50 +2,66 @@ export const WINSTON_TO_AR = 10e12;
 
 export const MAX_TAGS_SIZE = 2048;
 
-export const SOLANA_NETWORKS = [
-  'http://devnet.solana.com',
-  'http://testnet.solana.com',
-  'http://api.mainnet-beta.solana.com',
-];
-
-export const NETWORK_ALIAS = {
-  'http://devnet.solana.com': '0',
-  'http://testnet.solana.com': '1',
-  'http://api.mainnet-beta.solana.com': '2',
+export const SOLANA_NETWORKS = {
+  'http://devnet.solana.com': {
+    alias: '0',
+  },
+  'http://testnet.solana.com': {
+    alias: '1',
+  },
+  'http://api.mainnet-beta.solana.com': {
+    alias: '2',
+  },
 };
 
-export const TAGS = [
-  'slot',
-  'container',
-  'blockhash',
-  'network',
-  'database',
-  'numReadonlySignedAccounts',
-  'numReadonlyUnsignedAccounts',
-  'numRequiredSignatures',
-  'signature',
-  'accountKey',
-  'programIdIndex',
-];
+export const TX_TAGS = {
+  'numReadonlySignedAccounts': {
+    path: ['message', 'header', 'numReadonlySignedAccounts'],
+    alias: 'a',
+    iterable: false,
+  },
+  'numReadonlyUnsignedAccounts': {
+    path: ['message', 'header', 'numReadonlyUnsignedAccounts'],
+    alias: 'b',
+    iterable: false,
+  },
+  'numRequiredSignatures': {
+    path: ['message', 'header', 'numRequiredSignatures'],
+    alias: 'c',
+    iterable: false,
+  },
+  'signature': {
+    path: ['signatures'],
+    alias: 'd',
+    iterable: true,
+  },
+  'accountKey': {
+    path: ['message', 'accountKeys'],
+    alias: 'e',
+    iterable: true,
+  },
+  'programIdIndex': {
+    path: ['message', 'instructions'],
+    subPath: ['programIdIndex'],
+    alias: 'f',
+    iterable: true,
+  },
+};
 
-export const BLOCK_TAGS = [
-  'slot',
-  'container',
-  'blockhash',
-  'network',
-  'database',
-];
-
-export const TAG_ALIAS = {
-  slot: '1',
-  container: '2',
-  blockhash: '3',
-  network: '4',
-  database: '5',
-  numReadonlySignedAccounts: 'a',
-  numReadonlyUnsignedAccounts: 'b',
-  numRequiredSignatures: 'c',
-  signature: 'd',
-  accountKey: 'e',
-  programIdIndex: 'f',
+export const BLOCK_TAGS = {
+  'slot': {
+    alias: '1',
+  },
+  'container': {
+    alias: '2',
+  },
+  'blockhash': {
+    alias: '3',
+  },
+  'network': {
+    alias: '4',
+  },
+  'database': {
+    alias: '5',
+  },
 };

@@ -36,7 +36,9 @@ const fetchSlots = async (first, last) => {
 
 // eslint-disable-next-line import/prefer-default-export
 export const start = async () => {
-  await redisCleanup();
+  if (OPTIONS.cleanup) {
+    await redisCleanup();
+  }
   const balance = await arweaveAPI.getWalletBalance();
   await redis.set(WALLET_BALANCE, balance);
   console.log(`Wallet balance ${balance} winston`);
@@ -84,16 +86,14 @@ export const start = async () => {
 
   await redis.set(LAST_SAVED_SLOT, confirmedSlots.slice(-1)[0]);
 
-  const concurrency = OPTIONS.concurrency || 1;
-
-  txFetchingWorker.opts.concurrency = concurrency;
-  txPostingWorker.opts.concurrency = concurrency;
-  txStatusPollingWorker.opts.concurrency = concurrency;
+  txFetchingWorker.opts.concurrency = OPTIONS.concurrency;
+  txPostingWorker.opts.concurrency = OPTIONS.concurrency;
+  txStatusPollingWorker.opts.concurrency = OPTIONS.concurrency;
   walletBalanceWorker.opts.concurrency = 1;
 
   const { length } = confirmedSlots;
   // eslint-disable-next-line no-plusplus
-  for (let i = 0; i < (concurrency * 10) && i < length; ++i) {
+  for (let i = 0; i < (OPTIONS.concurrency * 10) && i < length; ++i) {
     const slot = confirmedSlots.shift();
     await fetchingTxsQueue.add(`${slot}`, slot);
   }

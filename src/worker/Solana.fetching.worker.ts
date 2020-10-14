@@ -8,17 +8,21 @@ import {
   postingTxsQueue,
   FETCHING_TXS_QUEUE,
 } from '../service/Queue.service';
+import { BLOCK_TAGS } from '../constants';
+import { OPTIONS } from '../config';
 
 async function postBlockToArweave(solanaBlock: ConfirmedBlock, slotNumber: number) {
   console.log(`Process Solana slot ${slotNumber}`);
   try {
     const txContainers = await createContainers(solanaBlock, slotNumber);
     await Promise.all(txContainers.map(async (container) => {
-      const result = await arweaveAPI.searchContainer(container.tags);
-      if (result.length > 0) return;
+      if (OPTIONS.verify) {
+        const result = await arweaveAPI.searchContainer(container.tags);
+        if (result.length > 0) return;
+      }
       container.txs = await compressData(container.txs);
 
-      return (await postingTxsQueue.add(`${container.tags['1']}_${container.tags['2']}`, container));
+      return (await postingTxsQueue.add(`${container.tags[BLOCK_TAGS['slot'].alias]}_${container.tags[BLOCK_TAGS['container'].alias]}`, container));
     }));
   } catch (e) {
     console.log(`Error occurred while processing slot ${slotNumber}: ${e}`);
