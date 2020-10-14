@@ -1,4 +1,4 @@
-import { and, or, equals } from 'arql-ops';
+import { and, equals } from 'arql-ops';
 import { arweave, wallet } from '../service/Arweave.service';
 import { BLOCK_TAGS } from '../constants';
 

@@ -12,18 +12,15 @@ export const TX_STATUS_POLLING_ATTEMPTS = parseInt(process.env.TX_STATUS_POLLING
 
 export const TX_NUMBER_OF_CONFIRMATIONS = parseInt(process.env.TX_NUMBER_OF_CONFIRMATIONS, 10) || 1;
 
-export const CONCURRENCY = parseInt(process.env.CONCURRENCY, 10) || 4;
-
 export const OPTIONS = {
   firstSlot: undefined,
   lastSlot: undefined,
   livestream: false,
-  database: process.env.DATABASE || 'dev',
   concurrency: parseInt(process.env.CONCURRENCY, 10) || 4,
-  compressed: false,
+  database: process.env.DATABASE || 'dev',
+  key: process.env.ARWEAVE_KEY_PATH,
   verify: true,
-  benchmark: false,
-  keyPath: process.env.ARWEAVE_KEY_PATH,
+  cleanup: false,
 };
 
 export const ARWEAVE_OPTIONS = {

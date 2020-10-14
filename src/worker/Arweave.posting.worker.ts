@@ -4,7 +4,7 @@ import {
   TX_STATUS_POLLING_DELAY,
   TX_STATUS_POLLING_ATTEMPTS,
 } from '../config';
-import { WINSTON_TO_AR } from '../constants';
+import { WINSTON_TO_AR, BLOCK_TAGS } from '../constants';
 import {
   postingTxsQueue,
   pendingTxsQueue,
@@ -37,7 +37,7 @@ export const txPostingWorker = new Worker(POSTING_TXS_QUEUE, async (job: Job) =>
     console.log(`Wallet balance is not sufficient to process arweave transaction ${arweaveTx.id}.\n
     Data size: ${arweaveTx.data_size} bytes. Price: ${txPrice} winston (${txPrice / WINSTON_TO_AR} AR)\n
     Balance: ${balance}`);
-    await postingTxsQueue.add(`${container.tags['1']}_${container.tags['2']}`, container);
+    await postingTxsQueue.add(`${container.tags[BLOCK_TAGS['slot'].alias]}_${container.tags[BLOCK_TAGS['container'].alias]}`, container);
     return;
   }
 
@@ -46,7 +46,7 @@ export const txPostingWorker = new Worker(POSTING_TXS_QUEUE, async (job: Job) =>
 
   await redis.set(AR_SPENT_UNCONFIRMED, arSpent + txPrice);
 
-  await pendingTxsQueue.add(`${container.tags['1']}_${container.tags['2']}`, {arweaveTx, container}, {
+  await pendingTxsQueue.add(`${container.tags[BLOCK_TAGS['slot'].alias]}_${container.tags[BLOCK_TAGS['container'].alias]}`, {arweaveTx, container}, {
     delay: TX_STATUS_POLLING_DELAY,
     attempts: TX_STATUS_POLLING_ATTEMPTS,
     backoff: TX_STATUS_POLLING_DELAY,
