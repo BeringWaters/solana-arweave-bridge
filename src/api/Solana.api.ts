@@ -13,7 +13,7 @@ axios.interceptors.response.use((response) => {
   if (response && (response.status === 429 || response.status === 504)
     && (!originalRequest.retry || originalRequest.retry <= MAX_RESPONSE_ATTEMPTS)) {
     originalRequest.retry = originalRequest.retry ? originalRequest.retry + 1 : 1;
-    return (new Promise(resolve => setTimeout(resolve, originalRequest.retry * 1000)))
+    return (new Promise((resolve) => setTimeout(resolve, originalRequest.retry * 1000)))
       .then(() => axios(originalRequest));
   }
   return Promise.reject(`${error.message}: ${response.statusText}`);
@@ -28,7 +28,7 @@ export async function getGenesisHash(id: number = 1) {
     .post(SOLANA_OPTIONS.url, {
       jsonrpc: SOLANA_OPTIONS.jsonrpc,
       id,
-      method: `getGenesisHash`,
+      method: 'getGenesisHash',
     })
     .catch((err) => {
       throw new Error(createErrorMessage(err, 'getGenesisHash'));
@@ -42,7 +42,7 @@ export async function getFirstSlot(id: number = 1) {
     .post(SOLANA_OPTIONS.url, {
       jsonrpc: SOLANA_OPTIONS.jsonrpc,
       id,
-      method: `getFirstAvailableBlock`,
+      method: 'getFirstAvailableBlock',
     })
     .catch((err) => {
       throw new Error(createErrorMessage(err, 'getFirstSlot'));
@@ -56,7 +56,7 @@ export async function getCurrentSlot(id: number = 1) {
     .post(SOLANA_OPTIONS.url, {
       jsonrpc: SOLANA_OPTIONS.jsonrpc,
       id,
-      method: `getSlot`,
+      method: 'getSlot',
     })
     .catch((err) => {
       throw new Error(createErrorMessage(err, 'getCurrentSlot'));
@@ -69,8 +69,8 @@ export async function getConfirmedBlock(index: number, id?: number) {
   const { data } = await axios
     .post(SOLANA_OPTIONS.url, {
       jsonrpc: SOLANA_OPTIONS.jsonrpc,
-      id: (id ? id : index),
-      method: `getConfirmedBlock`,
+      id: (id || index),
+      method: 'getConfirmedBlock',
       params: [index],
     })
     .catch((err) => {
@@ -84,8 +84,8 @@ export const getConfirmedBlocks = async (start: number, end: number, id?: number
   const { data } = await axios
     .post(SOLANA_OPTIONS.url, {
       jsonrpc: SOLANA_OPTIONS.jsonrpc,
-      id: (id ? id : start),
-      method: `getConfirmedBlocks`,
+      id: (id || start),
+      method: 'getConfirmedBlocks',
       params: [start, end],
     })
     .catch((err) => {
@@ -101,4 +101,4 @@ export default {
   getCurrentSlot,
   getConfirmedBlock,
   getConfirmedBlocks,
-}
+};

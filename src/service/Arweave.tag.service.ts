@@ -1,21 +1,16 @@
 import { ConfirmedTransactionMeta, Transaction } from '@solana/web3.js';
 import { TX_TAGS } from '../constants';
 
-export const getObjectValue = (path, obj) =>
-  path.reduce((xs, x) =>
-    (xs !== undefined && xs[x] !== undefined) ? xs[x] : null, obj);
+export const getObjectValue = (path, obj) => path.reduce((xs, x) => (
+  (xs !== undefined && xs[x] !== undefined) ? xs[x] : null), obj);
 
-export const getTagsSize = (tags) => {
-  return Object.keys(tags).reduce((tagBytes: number, tag) => {
-    const tagValue = tags[tag];
-    if (Array.isArray(tagValue)) {
-      return tagValue.reduce((bytes: number, value) => {
-        return bytes + value.length + 1;
-      }, tagBytes)
-    }
-    return tagBytes + tagValue.length + 1;
-  }, 0);
-};
+export const getTagsSize = (tags) => Object.keys(tags).reduce((tagBytes: number, tag) => {
+  const tagValue = tags[tag];
+  if (Array.isArray(tagValue)) {
+    return tagValue.reduce((bytes: number, value) => bytes + value.length + tag.length, tagBytes);
+  }
+  return tagBytes + tagValue.length + tag.length;
+}, 0);
 
 export const addTagsToTxs = (transactions: {
   transaction: Transaction;
@@ -24,12 +19,10 @@ export const addTagsToTxs = (transactions: {
   const tagNames = Object.keys(TX_TAGS);
   return transactions.reduce((agg, { transaction }) => {
     const tags = {
-      ...tagNames.reduce((agg, tag) => {
-        return {
-          ...agg,
-          [`${TX_TAGS[tag].alias}`]: [],
-        }
-      }, {}),
+      ...tagNames.reduce((tagAgg, tag) => ({
+        ...tagAgg,
+        [`${TX_TAGS[tag].alias}`]: [],
+      }), {}),
     };
 
     tagNames.forEach((tagName) => {

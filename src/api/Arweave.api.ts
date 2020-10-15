@@ -1,56 +1,40 @@
+/* eslint-disable no-console */
 import { and, equals } from 'arql-ops';
 import { arweave, wallet } from '../service/Arweave.service';
 import { BLOCK_TAGS } from '../constants';
 
-export const createTransaction = async (data) => {
-  const arweaveTx = await arweave.createTransaction(data, wallet.key);
-  return arweaveTx;
-};
+export const createTransaction = async (data) => arweave.createTransaction(data, wallet.key);
 
-export const signTransaction = async (tx) => {
-  return arweave.transactions.sign(tx, wallet.key);
-};
+export const signTransaction = async (tx) => arweave.transactions.sign(tx, wallet.key);
 
 export const postTransaction = async (tx, chunkUploading = true) => {
   if (chunkUploading) {
     const uploader = await arweave.transactions.getUploader(tx);
 
     while (!uploader.isComplete) {
+      // eslint-disable-next-line no-await-in-loop
       await uploader.uploadChunk();
     }
   }
   return arweave.transactions.post(tx);
 };
 
-export const getTransactionPrice = async (byteSize: number) => {
-  const price = await arweave.transactions.getPrice(byteSize);
-  return price;
-};
+export const getTransactionPrice = (byteSize: number) => arweave.transactions.getPrice(byteSize);
 
-export const getWalletBalance = async () => {
-  const balance = await arweave.wallets.getBalance(wallet.address);
-  return balance;
-};
+export const getWalletBalance = async () => arweave.wallets.getBalance(wallet.address);
 
-export const getTransactionStatus = async (id) => {
-  const txStatus = await arweave.transactions.getStatus(id);
-  return txStatus;
-};
+export const getTransactionStatus = async (id) => arweave.transactions.getStatus(id);
 
 export const getTransaction = async (id) => {
   try {
-    const tx = await arweave.transactions.get(id);
-    return tx;
+    return arweave.transactions.get(id);
   } catch (e) {
     console.log(`error: ${e}`);
     return {};
   }
 };
 
-export const getTransactionData = async (id) => {
-  const txData = await arweave.transactions.getData(id, {decode: true});
-  return txData;
-};
+export const getTransactionData = async (id) => arweave.transactions.getData(id, { decode: true });
 
 export const searchContainer = async (parameters) => {
   const myQuery = and(
@@ -62,8 +46,7 @@ export const searchContainer = async (parameters) => {
     equals(BLOCK_TAGS['database'].alias, parameters[BLOCK_TAGS['database'].alias]),
   );
 
-  const results = await arweave.arql(myQuery);
-  return results;
+  return arweave.arql(myQuery);
 };
 
 export default {
@@ -76,4 +59,4 @@ export default {
   getTransaction,
   getTransactionData,
   searchContainer,
-}
+};
