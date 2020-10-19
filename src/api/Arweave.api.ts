@@ -54,6 +54,7 @@ export const getTransactionData = async (id) => {
 
 export const searchContainer = async (parameters) => {
   const myQuery = and(
+    equals(BLOCK_TAGS['block'].alias, parameters[BLOCK_TAGS['block'].alias]),
     equals(BLOCK_TAGS['slot'].alias, parameters[BLOCK_TAGS['slot'].alias]),
     equals(BLOCK_TAGS['container'].alias, parameters[BLOCK_TAGS['container'].alias]),
     equals(BLOCK_TAGS['blockhash'].alias, parameters[BLOCK_TAGS['blockhash'].alias]),
