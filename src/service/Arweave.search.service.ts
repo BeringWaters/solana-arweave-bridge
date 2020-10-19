@@ -18,36 +18,38 @@ const getTagAlias = (name) => {
   return name;
 };
 
-export const search = async (name, value) => {
-  const alias = getTagAlias(name);
-  const query = equals(alias, value);
+export default {
+  searchByTag: async (name, value) => {
+    const alias = getTagAlias(name);
+    const query = equals(alias, value);
 
-  const txIds = await arweave.arql(query);
+    const txIds = await arweave.arql(query);
 
-  if (txIds.length === 0) {
-    return [];
+    if (txIds.length === 0) {
+      return [];
+    }
+
+    const txArrays: Array<any> = await Promise.all(txIds.map(async (txId) => {
+      const data = await getTransactionData(txId);
+      const txArray = await decompressData(data);
+      return txArray;
+    }));
+
+    const solanaTxs = txArrays.reduce((txs: Array<any>, txArray: any) => {
+      return [...txs, ...txArray];
+    }, []);
+
+    if (blockTagsNames.includes(name) || !txTagsNames.includes(name)) {
+      return solanaTxs;
+    }
+
+    const txTag = TX_TAGS[name];
+
+    const txsFound = solanaTxs.filter((tx: any) => {
+      const txValue = getObjectValue(txTag.path, tx);
+      return txValue === value;
+    });
+
+    return txsFound;
   }
-
-  const txArrays: Array<any> = await Promise.all(txIds.map(async (txId) => {
-    const data = await getTransactionData(txId);
-    const txArray = await decompressData(data);
-    return txArray;
-  }));
-
-  const solanaTxs = txArrays.reduce((txs: Array<any>, txArray: any) => {
-    return [...txs, ...txArray];
-  }, []);
-
-  if (blockTagsNames.includes(name) || !txTagsNames.includes(name)) {
-    return solanaTxs;
-  }
-
-  const txTag = TX_TAGS[name];
-
-  const txsFound = solanaTxs.filter((tx: any) => {
-    const txValue = getObjectValue(txTag.path, tx);
-    return txValue === value;
-  });
-
-  return txsFound;
 };
