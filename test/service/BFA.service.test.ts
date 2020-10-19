@@ -286,7 +286,8 @@ describe('BFA Service Tests', () => {
         },
       ],
       tags: {
-        1: '1',
+        0: '1',
+        1: '0',
         2: '0',
         3: 'AcknnkY4ok5BZuk69WijDETKVRUPZoMtniZHMe4ZaK1e',
         4: '2',
@@ -323,7 +324,7 @@ describe('BFA Service Tests', () => {
           '4',
         ],
       },
-      spaceLeft: 719,
+      spaceLeft: 717,
     };
 
     const [txContainer] = await createContainers(solanaBlock, slotNumber);
