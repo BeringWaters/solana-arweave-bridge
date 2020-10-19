@@ -14,11 +14,12 @@ const getNetworkAlias = (networkUrl) => {
   return networkUrl;
 };
 
-const createContainer = (blockhash, slotNumber, containerNumber) => {
+const createContainer = (blockNumber, blockhash, slotNumber, containerNumber) => {
   const blockTags = {
+    [`${BLOCK_TAGS['block'].alias}`]: `${blockNumber}`,
     [`${BLOCK_TAGS['slot'].alias}`]: `${slotNumber}`,
-    [`${BLOCK_TAGS['container'].alias}`]: `${containerNumber}`,
     [`${BLOCK_TAGS['blockhash'].alias}`]: `${blockhash}`,
+    [`${BLOCK_TAGS['container'].alias}`]: `${containerNumber}`,
     [`${BLOCK_TAGS['network'].alias}`]: `${getNetworkAlias(SOLANA_OPTIONS.url)}`,
     [`${BLOCK_TAGS['database'].alias}`]: `${OPTIONS.database}`,
   };
@@ -48,8 +49,8 @@ const findBFContainerIndex = (containers, bytes) => {
   return containerIndex;
 };
 
-export const createContainers = async (solanaBlock, slotNumber: number) => {
-  const { blockhash, transactions: solanaTxs } = solanaBlock;
+export const createContainers = async (solanaBlock, blockNumber: number) => {
+  const { blockhash, parentSlot: slotNumber, transactions: solanaTxs } = solanaBlock;
   const taggedTxs = addTagsToTxs(solanaTxs);
 
   let containerNumber = 0;
@@ -57,11 +58,11 @@ export const createContainers = async (solanaBlock, slotNumber: number) => {
     const { tags, transaction, bytes} = taggedTx;
     let txContainerIndex = findBFContainerIndex(txContainers, bytes);
     if (txContainerIndex === undefined) {
-      txContainerIndex = (txContainers.push(createContainer(blockhash, slotNumber, containerNumber++)) - 1);
+      txContainerIndex = (txContainers.push(createContainer(blockNumber, blockhash, slotNumber, containerNumber++)) - 1);
     }
     txContainers[txContainerIndex].txs.push(transaction);
     txContainers[txContainerIndex].tags = addTagsToContainer(txContainers[txContainerIndex].tags, tags);
     txContainers[txContainerIndex].spaceLeft -= bytes;
     return txContainers;
-  }, [createContainer(blockhash, slotNumber, containerNumber++)])
+  }, [createContainer(blockNumber, blockhash, slotNumber, containerNumber++)])
 };
