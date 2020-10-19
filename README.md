@@ -33,18 +33,32 @@ $ ./bin/cli.js <command> <options>
 ```
 
 #### Commands:
-*  `stream`: Start the bridge with specified options
+*  `stream`: Start the bridge to transferring Solana historical data to Arweave with specified options
+*  `livestream`: Start the bridge to livestreaming Solana data to Arweave with specified options
 *  `search`: Search transactions by tag value
 
 #### Options:
 ##### stream
-*  `--startslot`: *[number, optional]* First Solana slot number to fetch. Default: current Solana slot
-*  `--endslot`: *[number, optional]* Last Solana slot number to fetch. If not specified, livestream will be enabled
-*  `--concurrency`: *[number, optional]* Number of Bull threads to perform fetching and writing jobs. Default: .env.CONCURRENCY || 4
-*  `--database`: *[string, optional]* Tag to identify bridge session. Default: .env.DATABASE || 'dev'
-*  `--key`: *[string, optional]* Path to Arweave key. Default: .env.ARWEAVE_KEY_PATH || 'arweave-keyfile.json'
-*  `--network`: *[string, optional]* Solana node URL. Default: .env.SOLANA_NODE_URL || 'http://testnet.solana.com'
-*  `--rpc`: *[string, optional]* Solana rpc version. Default: .env.SOLANA_RPC || '2.0'
+*  `-s, --startslot`: *[number, optional]* First Solana slot number to fetch. Default: current Solana slot
+*  `-e, --endslot`: *[number, optional]* Last Solana slot number to fetch. If not specified, livestream will be enabled
+*  `-c, --concurrency`: *[number, optional]* Number of Bull threads to perform fetching and writing jobs. Default: .env.CONCURRENCY || 4
+*  `-k, --key`: *[string, optional]* Path to Arweave key. Default: .env.ARWEAVE_KEY_PATH || 'arweave-keyfile.json'
+*  `-d, --database`: *[string, optional]* Tag to identify bridge session. Default: .env.DATABASE || 'dev'
+*  `-v, --verify`: *[boolean, optional]* Check if Arweave transaction with specified set of block tags already exists. Default: true
+*  `-n, --network`: *[string, optional]* Solana node URL. Default: .env.SOLANA_NODE_URL || 'http://testnet.solana.com'
+*  `-r, --rpc`: *[string, optional]* Solana rpc version. Default: .env.SOLANA_RPC || '2.0'
+*  `-p, --redisport`: *[number, optional]* Port of a Redis instance. Default: .env.REDIS_PORT || 6379
+*  `-h, --redishost`: *[string, optional]* Host of a Redis instance. Default: .env.REDIS_HOST || '127.0.0.1'
+
+##### livestreamstream
+*  `-c, --concurrency`: *[number, optional]* Number of Bull threads to perform fetching and writing jobs. Default: .env.CONCURRENCY || 4
+*  `-k, --key`: *[string, optional]* Path to Arweave key. Default: .env.ARWEAVE_KEY_PATH || 'arweave-keyfile.json'
+*  `-d, --database`: *[string, optional]* Tag to identify bridge session. Default: .env.DATABASE || 'dev'
+*  `-v, --verify`: *[boolean, optional]* Check if Arweave transaction with specified set of block tags already exists. Default: true
+*  `-n, --network`: *[string, optional]* Solana node URL. Default: .env.SOLANA_NODE_URL || 'http://testnet.solana.com'
+*  `-r, --rpc`: *[string, optional]* Solana rpc version. Default: .env.SOLANA_RPC || '2.0'
+*  `-p, --redisport`: *[number, optional]* Port of a Redis instance. Default: .env.REDIS_PORT || 6379
+*  `-h, --redishost`: *[string, optional]* Host of a Redis instance. Default: .env.REDIS_HOST || '127.0.0.1'
 
 ##### search
 *  `--tagname`: *[string, required]* Tag name
@@ -100,6 +114,9 @@ TX_TAGS = {
 };
 
 BLOCK_TAGS = {
+  'block': {
+    alias: '0',
+  },
   'slot': {
     alias: '1',
   },

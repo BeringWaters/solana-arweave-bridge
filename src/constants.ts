@@ -49,6 +49,9 @@ export const TX_TAGS = {
 };
 
 export const BLOCK_TAGS = {
+  'block': {
+    alias: '0',
+  },
   'slot': {
     alias: '1',
   },

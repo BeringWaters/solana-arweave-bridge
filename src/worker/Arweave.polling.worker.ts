@@ -1,10 +1,17 @@
 import { Job, Worker } from 'bullmq';
-import {
-  AR_SPENT, AR_SPENT_UNCONFIRMED, PENDING_TXS_QUEUE, postingTxsQueue, savedTxsQueue,
-} from '../service/Queue.service';
+
 import arweaveAPI from '../api/Arweave.api';
 import { TX_NUMBER_OF_CONFIRMATIONS } from '../config';
-import { redis } from '../service/Redis.service';
+import {
+	PENDING_TXS_QUEUE,
+	postingTxsQueue,
+} from '../service/Queue.service';
+import {
+  redis,
+  AR_SPENT,
+  AR_SPENT_UNCONFIRMED,
+  SAVED_BLOCKS_SET,
+} from '../service/Redis.service';
 
 // eslint-disable-next-line consistent-return
 export const txStatusPollingWorker = new Worker(PENDING_TXS_QUEUE, async (job: Job) => {
@@ -33,8 +40,7 @@ txStatusPollingWorker.on('completed', async (job: Job) => {
 
   const arSpent = await redis.get(AR_SPENT) || '0';
   await redis.set(AR_SPENT, parseInt(arSpent, 10) + parseInt(arweaveTx.reward, 10));
-
-  await savedTxsQueue.add(`${name}`, arweaveTx);
+  await redis.sadd(SAVED_BLOCKS_SET, name);
   console.log(`Tx ${arweaveTx.id} succeed.`);
 });
 
