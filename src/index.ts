@@ -257,5 +257,13 @@ export const livestream = async () => {
 };
 
 export const search = async (tagname, tagvalue) => {
+  /**
+   * Arweave service initialization
+   */
+  try {
+    await initializeArweaveService();
+  } catch (err) {
+    throw new Error(`Failed to initialize Arweave Service: ${err}`);
+  }
   return searchService.searchByTag(tagname, tagvalue)
 };
