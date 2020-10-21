@@ -17,7 +17,6 @@ export const WALLET_BALANCE_POLLING_TIMEOUT = parseInt(process.env.WALLET_BALANC
 export const LIVESTREAM_POLLING_TIMEOUT = parseInt(process.env.LIVESTREAM_POLLING_TIMEOUT, 10) || 200;
 
 export const OPTIONS = {
-  livestream: false,
   concurrency: parseInt(process.env.CONCURRENCY, 10) || 16,
   database: process.env.DATABASE || 'dev',
   key: process.env.ARWEAVE_KEY_PATH || 'arweave-keyfile',

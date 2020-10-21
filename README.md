@@ -39,9 +39,9 @@ $ ./bin/cli.js <command> <options>
 
 #### Options:
 ##### stream
-*  `-s, --startslot`: *[number, optional]* First Solana slot number to fetch. Default: current Solana slot
-*  `-e, --endslot`: *[number, optional]* Last Solana slot number to fetch. If not specified, livestream will be enabled
-*  `-c, --concurrency`: *[number, optional]* Number of Bull threads to perform fetching and writing jobs. Default: .env.CONCURRENCY || 4
+*  `-s, --startslot`: *[number, required]* Number of the first Solana slot to transfer.
+*  `-e, --endslot`: *[number, required]* Number of the last Solana slot to transfer.
+*  `-c, --concurrency`: *[number, optional]* Number of Bull threads to perform fetching and writing jobs. Default: .env.CONCURRENCY || 16
 *  `-k, --key`: *[string, optional]* Path to Arweave key. Default: .env.ARWEAVE_KEY_PATH || 'arweave-keyfile.json'
 *  `-d, --database`: *[string, optional]* Tag to identify bridge session. Default: .env.DATABASE || 'dev'
 *  `-v, --verify`: *[boolean, optional]* Check if Arweave transaction with specified set of block tags already exists. Default: true
@@ -51,7 +51,7 @@ $ ./bin/cli.js <command> <options>
 *  `-h, --redishost`: *[string, optional]* Host of a Redis instance. Default: .env.REDIS_HOST || '127.0.0.1'
 
 ##### livestreamstream
-*  `-c, --concurrency`: *[number, optional]* Number of Bull threads to perform fetching and writing jobs. Default: .env.CONCURRENCY || 4
+*  `-c, --concurrency`: *[number, optional]* Number of Bull threads to perform fetching and writing jobs. Default: .env.CONCURRENCY || 16
 *  `-k, --key`: *[string, optional]* Path to Arweave key. Default: .env.ARWEAVE_KEY_PATH || 'arweave-keyfile.json'
 *  `-d, --database`: *[string, optional]* Tag to identify bridge session. Default: .env.DATABASE || 'dev'
 *  `-v, --verify`: *[boolean, optional]* Check if Arweave transaction with specified set of block tags already exists. Default: true
