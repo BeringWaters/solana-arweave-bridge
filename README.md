@@ -1,4 +1,4 @@
-#Solana-Arweave Bridge
+# Solana-Arweave Bridge
 
 This utility is a bridge to connect Solana ledger data to Arweave permanent storage</h4>
 
@@ -50,7 +50,7 @@ $ ./bin/cli.js <command> <options>
 *  `-p, --redisport`: *[number, optional]* Port of a Redis instance. Default: .env.REDIS_PORT || 6379
 *  `-h, --redishost`: *[string, optional]* Host of a Redis instance. Default: .env.REDIS_HOST || '127.0.0.1'
 
-##### livestreamstream
+##### livestream
 *  `-c, --concurrency`: *[number, optional]* Number of Bull threads to perform fetching and writing jobs. Default: .env.CONCURRENCY || 16
 *  `-k, --key`: *[string, optional]* Path to Arweave key. Default: .env.ARWEAVE_KEY_PATH || 'arweave-keyfile.json'
 *  `-d, --database`: *[string, optional]* Tag to identify bridge session. Default: .env.DATABASE || 'dev'
