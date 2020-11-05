@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Worker, Job } from 'bullmq';
 import arweaveAPI from '../api/Arweave.api';
 import {
@@ -21,20 +22,20 @@ export const txPostingWorker = new Worker(POSTING_TXS_QUEUE, async (job: Job) =>
   const { data: container } = job;
   const { txs, tags } = container;
 
-  const blockNumber = container.tags[BLOCK_TAGS['block'].alias];
-  const containerNumber = container.tags[BLOCK_TAGS['container'].alias];
-  const database = container.tags[BLOCK_TAGS['database'].alias];
-  const network = container.tags[BLOCK_TAGS['network'].alias];
+  const blockNumber = container.tags[BLOCK_TAGS.block.alias];
+  const containerNumber = container.tags[BLOCK_TAGS.container.alias];
+  const database = container.tags[BLOCK_TAGS.database.alias];
+  const network = container.tags[BLOCK_TAGS.network.alias];
 
-  const arweaveTx = await arweaveAPI.createTransaction({data: txs});
+  const arweaveTx = await arweaveAPI.createTransaction({ data: txs });
 
   Object.keys(tags).forEach((tagKey) => {
     const tagValue = tags[tagKey];
     if (Array.isArray(tagValue)) {
-      tagValue.forEach((value => arweaveTx.addTag(tagKey, value)));
+      tagValue.forEach(((value) => arweaveTx.addTag(tagKey, value)));
       return;
     }
-    arweaveTx.addTag(tagKey, tagValue)
+    arweaveTx.addTag(tagKey, tagValue);
   });
 
   const arSpent = parseInt(await redis.get(AR_SPENT_UNCONFIRMED) || '0', 10);
@@ -60,7 +61,7 @@ export const txPostingWorker = new Worker(POSTING_TXS_QUEUE, async (job: Job) =>
       wallet: wallet.address,
       remove: false,
       arweaveTx,
-      container
+      container,
     },
     {
       delay: TX_STATUS_POLLING_DELAY,
@@ -68,6 +69,7 @@ export const txPostingWorker = new Worker(POSTING_TXS_QUEUE, async (job: Job) =>
       backoff: TX_STATUS_POLLING_DELAY,
       removeOnComplete: true,
       removeOnFail: true,
-    });
+    },
+  );
   console.log(`Posted arweave tx: ${arweaveTx.id}. Data size: ${arweaveTx.data_size} bytes. Price: ${txPrice} winston (${txPrice / WINSTON_TO_AR} AR)`);
 });
