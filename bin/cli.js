@@ -5,71 +5,52 @@ const { Command } = require('commander');
 const { stream, livestream, search } = require('../dist/src');
 const { updateOptions, updateSolanaOptions, updateRedisOptions } = require('../dist/src/config');
 
-const verifyStreamOptions = (options) => {
-  const {
-    startslot,
-    endslot,
-    concurrency,
-    redisport,
-  } = options;
-  let verified = true;
-
-  if (Number.isNaN(startslot)) {
-    console.log('Starting slot must be a number');
-    verified = false;
-  }
-
-  if (Number.isNaN(endslot)) {
-    console.log('Ending slot must be a number');
-    verified = false;
-  }
-
-  if (startslot > endslot) {
-    console.log('Ending slot must be greater than starting slot');
-    verified = false;
-  }
-
-  if (concurrency && Number.isNaN(concurrency)) {
-    console.log('Concurrency must be a number');
-    verified = false;
-  }
-
-  if (concurrency && concurrency < 1) {
-    console.log('Concurrency must be a positive number');
-    verified = false;
-  }
-
-  if (redisport && Number.isNaN(redisport)) {
-    console.log('Redis port must be a number');
-    verified = false;
-  }
-
-  return verified;
-};
-
 const verifyLivestreamOptions = (options) => {
   const {
     concurrency,
     redisport,
   } = options;
-  let verified = true;
 
   if (concurrency && Number.isNaN(concurrency)) {
     console.log('Concurrency must be a number');
-    verified = false;
+    return false;
   }
 
   if (concurrency && concurrency < 1) {
     console.log('Concurrency must be a positive number');
-    verified = false;
+    return false;
   }
 
   if (redisport && Number.isNaN(redisport)) {
     console.log('Redis port must be a number');
-    verified = false;
+    return false;
   }
 
-  return verified;
+  return true;
+};
+
+const verifyStreamOptions = (options) => {
+  const {
+    startslot,
+    endslot,
+  } = options;
+
+  if (Number.isNaN(startslot)) {
+    console.log('Starting slot must be a number');
+    return false;
+  }
+
+  if (Number.isNaN(endslot)) {
+    console.log('Ending slot must be a number');
+    return false;
+  }
+
+  if (startslot > endslot) {
+    console.log('Ending slot must be greater than starting slot');
+    return false;
+  }
+
+  return verifyLivestreamOptions(options);
 };
 
 const solanaArweaveBridge = new Command('Solana Arweave Bridge');
@@ -95,7 +76,7 @@ solanaArweaveBridge
   .option('-r, --rpc [rpc] <string>', 'Solana rpc version. Default: \'2.0\'')
   .option('-p, --redisport [redisport] <number>', 'Redis port. Default: 6379', parseInt)
   .option('-h, --redishost [redishost] <string>', 'Redis host. Default: \'127.0.0.1\'')
-  .action(async (options) => {
+  .action((options) => {
     const {
       startslot,
       endslot,
@@ -131,7 +112,7 @@ solanaArweaveBridge
     });
 
     try {
-      await stream(startslot, endslot);
+      stream(startslot, endslot);
     } catch (err) {
       console.error(`${err}`);
       process.exit(1);
@@ -150,7 +131,7 @@ solanaArweaveBridge
   .option('--rpc [rpc] <string>', 'Solana rpc version. Default: \'2.0\'')
   .option('--redisport [redisport] <number>', 'Redis port. Default: 6379')
   .option('--redishost [redishost] <string>', 'Redis host. Default: \'127.0.0.1\'')
-  .action(async (options) => {
+  .action((options) => {
     const {
       concurrency,
       key,
@@ -186,7 +167,7 @@ solanaArweaveBridge
     });
 
     try {
-      await livestream();
+      livestream();
     } catch (err) {
       console.error(`${err}`);
     }
@@ -197,14 +178,14 @@ solanaArweaveBridge
   .description('Search transactions by tag')
   .option('--tagname [tagname]')
   .option('--tagvalue [tagvalue]')
-  .action(async () => {
+  .action(() => {
     const {
       tagname,
       tagvalue,
     } = solanaArweaveBridge;
 
     try {
-      const result = await search(tagname, tagvalue);
+      const result = search(tagname, tagvalue);
       if (result.length === 0) {
         console.log('Nothing was found');
         return;
