@@ -16,6 +16,7 @@
   "dependencies": {
     "@solana/web3.js": "^0.71.6",
     "arweave": "^1.9.1",
+    "arweave-bundles": "^1.0.0",
     "axios": "^0.20.0",
     "bullmq": "^1.9.0",
     "commander": "^6.0.0",
