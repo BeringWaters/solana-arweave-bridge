@@ -411,11 +411,6 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
-arql-ops@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/arql-ops/-/arql-ops-1.0.0.tgz#0eeb7ee7ae71e0c8937c8c82c6bb79a25235dae3"
-  integrity sha512-7nj1QWj8uNP4LipeF6Wkbn3We/2ZVDAaEJWxMk6NNBM5bZBAKsAAn1ime34+2nyuaaA/yBALaanuhF674JjBRw==
-
 array-includes@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/array-includes/-/array-includes-3.1.1.tgz#cdd67e6852bdf9c1215460786732255ed2459348"
