@@ -13,5 +13,5 @@ describe('Search Service Tests', () => {
     const txsFound = await searchService.searchByTag(BLOCK_TAGS.blockhash.alias, blockhash);
 
     expect(txsFound.length).to.be.at.least(58);
-  });
+  }).timeout(5000);
 });

@@ -21,6 +21,7 @@ export default {
 
     const query = `query {
         transactions(
+            first: 100,
             tags: [
                 { name: "${alias}", values: ["${value}"] }
             ]
