@@ -1,9 +1,7 @@
-import { equals } from 'arql-ops';
-import { arweave } from './Arweave.service';
-import { getTransactionData } from '../api/Arweave.api';
+import { getTransactionData, GraphQL } from '../api/Arweave.api';
 import { decompressData } from './Arweave.compression.service';
 import { getObjectValue } from './Arweave.tag.service';
-import { TX_TAGS, BLOCK_TAGS } from '../constants';
+import { BLOCK_TAGS, TX_TAGS } from '../constants';
 
 const txTagsNames = Object.keys(TX_TAGS);
 const blockTagsNames = Object.keys(BLOCK_TAGS);
@@ -21,23 +19,38 @@ const getTagAlias = (name) => {
 export default {
   searchByTag: async (name, value) => {
     const alias = getTagAlias(name);
-    const query = equals(alias, value);
 
-    const txIds = await arweave.arql(query);
+    const query = `query {
+        transactions(
+            tags: [
+                { name: "${alias}", values: ["${value}"] }
+            ]
+        ) {
+            edges {
+                cursor
+                node {
+                    id
+                    tags {
+                        name
+                        value
+                    }
+                }
+            }
+        }
+    }`;
 
-    if (txIds.length === 0) {
+    const transactions = await GraphQL(query);
+
+    if (transactions.length === 0) {
       return [];
     }
 
-    const txArrays: Array<any> = await Promise.all(txIds.map(async (txId) => {
-      const data = await getTransactionData(txId);
-      const txArray = await decompressData(data);
-      return txArray;
+    const txArrays: Array<any> = await Promise.all(transactions.map(async (tx) => {
+      const data = await getTransactionData(tx.node.id);
+      return decompressData(data);
     }));
 
-    const solanaTxs = txArrays.reduce((txs: Array<any>, txArray: any) => {
-      return [...txs, ...txArray];
-    }, []);
+    const solanaTxs = txArrays.reduce((txs: Array<any>, txArray: any) => [...txs, ...txArray], []);
 
     if (blockTagsNames.includes(name) || !txTagsNames.includes(name)) {
       return solanaTxs;
@@ -45,11 +58,9 @@ export default {
 
     const txTag = TX_TAGS[name];
 
-    const txsFound = solanaTxs.filter((tx: any) => {
+    return solanaTxs.filter((tx: any) => {
       const txValue = getObjectValue(txTag.path, tx);
       return txValue === value;
     });
-
-    return txsFound;
-  }
+  },
 };

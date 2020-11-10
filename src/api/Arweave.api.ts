@@ -1,7 +1,14 @@
 /* eslint-disable no-console */
-import { and, equals } from 'arql-ops';
+import axios from 'axios';
 import { arweave, wallet } from '../service/Arweave.service';
-import { BLOCK_TAGS } from '../constants';
+import { ARWEAVE_GRAPHQL, BLOCK_TAGS } from '../constants';
+
+export async function GraphQL(query: string) {
+  const { data } = await axios
+    .post(ARWEAVE_GRAPHQL, { query });
+
+  return data.data.transactions.edges;
+}
 
 export const createTransaction = async (data) => arweave.createTransaction(data, wallet.key);
 
@@ -37,16 +44,32 @@ export const getTransaction = async (id) => {
 export const getTransactionData = async (id) => arweave.transactions.getData(id, { decode: true });
 
 export const searchContainer = async (parameters) => {
-  const myQuery = and(
-    equals(BLOCK_TAGS['block'].alias, parameters[BLOCK_TAGS['block'].alias]),
-    equals(BLOCK_TAGS['slot'].alias, parameters[BLOCK_TAGS['slot'].alias]),
-    equals(BLOCK_TAGS['container'].alias, parameters[BLOCK_TAGS['container'].alias]),
-    equals(BLOCK_TAGS['blockhash'].alias, parameters[BLOCK_TAGS['blockhash'].alias]),
-    equals(BLOCK_TAGS['network'].alias, parameters[BLOCK_TAGS['network'].alias]),
-    equals(BLOCK_TAGS['database'].alias, parameters[BLOCK_TAGS['database'].alias]),
-  );
+  const query = `query {
+        transactions(
+            first: 100,
+            tags: [
+                { name: "${BLOCK_TAGS.block.alias}", values: ["${parameters[BLOCK_TAGS.block.alias]}"] },
+                { name: "${BLOCK_TAGS.slot.alias}", values: ["${parameters[BLOCK_TAGS.slot.alias]}"] },
+                { name: "${BLOCK_TAGS.container.alias}", values: ["${parameters[BLOCK_TAGS.container.alias]}"] },
+                { name: "${BLOCK_TAGS.blockhash.alias}", values: ["${parameters[BLOCK_TAGS.blockhash.alias]}"] },
+                { name: "${BLOCK_TAGS.network.alias}", values: ["${parameters[BLOCK_TAGS.network.alias]}"] },
+                { name: "${BLOCK_TAGS.database.alias}", values: ["${parameters[BLOCK_TAGS.database.alias]}"] }
+            ]
+        ) {
+            edges {
+                cursor
+                node {
+                    id
+                    tags {
+                        name
+                        value
+                    }
+                }
+            }
+        }
+    }`;
 
-  return arweave.arql(myQuery);
+  return GraphQL(query);
 };
 
 export default {

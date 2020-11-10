@@ -14,33 +14,35 @@ export const SOLANA_NETWORKS = {
   },
 };
 
+export const ARWEAVE_GRAPHQL = 'https://arweave.dev/graphql';
+
 export const TX_TAGS = {
-  'numReadonlySignedAccounts': {
+  numReadonlySignedAccounts: {
     path: ['message', 'header', 'numReadonlySignedAccounts'],
     alias: 'a',
     iterable: false,
   },
-  'numReadonlyUnsignedAccounts': {
+  numReadonlyUnsignedAccounts: {
     path: ['message', 'header', 'numReadonlyUnsignedAccounts'],
     alias: 'b',
     iterable: false,
   },
-  'numRequiredSignatures': {
+  numRequiredSignatures: {
     path: ['message', 'header', 'numRequiredSignatures'],
     alias: 'c',
     iterable: false,
   },
-  'signature': {
+  signature: {
     path: ['signatures'],
     alias: 'd',
     iterable: true,
   },
-  'accountKey': {
+  accountKey: {
     path: ['message', 'accountKeys'],
     alias: 'e',
     iterable: true,
   },
-  'programIdIndex': {
+  programIdIndex: {
     path: ['message', 'instructions'],
     subPath: ['programIdIndex'],
     alias: 'f',
@@ -49,22 +51,22 @@ export const TX_TAGS = {
 };
 
 export const BLOCK_TAGS = {
-  'block': {
+  block: {
     alias: '0',
   },
-  'slot': {
+  slot: {
     alias: '1',
   },
-  'container': {
+  container: {
     alias: '2',
   },
-  'blockhash': {
+  blockhash: {
     alias: '3',
   },
-  'network': {
+  network: {
     alias: '4',
   },
-  'database': {
+  database: {
     alias: '5',
   },
 };
