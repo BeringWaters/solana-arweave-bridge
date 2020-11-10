@@ -33,7 +33,7 @@ export const txPostingWorker = new Worker(POSTING_TXS_QUEUE, async (job: Job) =>
   const { data: transactions } = job;
 
   const createBundle = async (transaction) => {
-    const data = JSON.stringify(transaction);
+    const data = JSON.stringify(transaction.txs);
     const bundle = await arBundles.createData({
       data,
       nonce: NONCE,
