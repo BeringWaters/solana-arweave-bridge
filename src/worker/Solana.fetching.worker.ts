@@ -2,6 +2,7 @@
 import { ConfirmedBlock } from '@solana/web3.js';
 import { Job, Worker } from 'bullmq';
 import solanaAPI from '../api/Solana.api';
+import arweaveAPI from '../api/Arweave.api';
 
 import { createBlockContainer, getNetworkAlias } from '../service/Arweave.BFA.service';
 import {
@@ -10,6 +11,27 @@ import {
   FETCHING_TXS_QUEUE,
 } from '../service/Queue.service';
 import { OPTIONS, SOLANA_OPTIONS } from '../config';
+import { redis, SAVED_BLOCKS_SET } from '../service/Redis.service';
+
+const isBlockExistInArweave = async (blockContainer, blockNumber, txIdentifier) => {
+  for (let i = 0; i < blockContainer.length; i++) {
+    if (OPTIONS.verify) {
+      // eslint-disable-next-line no-await-in-loop
+      const result = await arweaveAPI.searchContainer(blockContainer[i].tags);
+      if (result.length > 0) {
+        console.log(`Block ${blockNumber} is already stored in Arweave`);
+        return true;
+      }
+    }
+    // eslint-disable-next-line no-await-in-loop
+    const processed = await redis.sismember(SAVED_BLOCKS_SET, txIdentifier);
+    if (processed) {
+      console.log(`Block ${blockNumber} is already stored in Arweave`);
+      return true;
+    }
+  }
+  return false;
+};
 
 // eslint-disable-next-line consistent-return
 async function postBlockToArweave(solanaBlock: ConfirmedBlock, blockNumber: number) {
@@ -17,33 +39,14 @@ async function postBlockToArweave(solanaBlock: ConfirmedBlock, blockNumber: numb
   try {
     const blockContainer = await createBlockContainer(solanaBlock, blockNumber);
     const txIdentifier = `${blockNumber}_${OPTIONS.database}_${getNetworkAlias(SOLANA_OPTIONS.url)}`;
+    if (await isBlockExistInArweave(blockContainer, blockNumber, txIdentifier)) {
+      return;
+    }
 
-    return (await postingTxsQueue.add(txIdentifier, blockContainer));
-
-    // TODO: check container existence
-    // return await Promise.all(blockContainers.map(async (container) => {
-    //   if (OPTIONS.verify) {
-    //     const result = await arweaveAPI.searchContainer(container.tags);
-    //     if (result.length > 0) return;
-    //   }
-    //   // container.txs = await compressData(container.txs);
-    //
-    //   const containerNumber = container.tags[BLOCK_TAGS.container.alias];
-    //   const database = container.tags[BLOCK_TAGS.database.alias];
-    //   const network = container.tags[BLOCK_TAGS.network.alias];
-    //
-    //   const txIdentifier = `${blockNumber}_${containerNumber}_${database}_${network}`;
-    //   const processed = await redis.sismember(SAVED_BLOCKS_SET, txIdentifier);
-    //   if (processed) {
-    //     console.log(`Block ${blockNumber} (part ${containerNumber})
-    //     is already stored in Arweave`);
-    //     return;
-    //   }
-    //
-    //   return (await postingTxsQueue.add(txIdentifier, container));
-    // }));
+    await postingTxsQueue.add(txIdentifier, blockContainer);
   } catch (e) {
     console.log(`Error occurred while processing block ${blockNumber}: ${e}`);
+    throw (e);
   }
 }
 
