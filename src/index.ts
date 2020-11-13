@@ -49,11 +49,9 @@ export const stream = async (firstslot, lastslot) => {
       throw new Error(`Failed to fetch confirmed Solana blocks ids: ${err}`);
     }
 
-    // eslint-disable-next-line no-plusplus
-    for (let i = 0; i < confirmedBlocks.length; ++i) {
-      const blockNumber = confirmedBlocks.shift();
-      await fetchingTxsQueue.add(`${blockNumber}`, blockNumber);
-    }
+    confirmedBlocks.map(async (block) => {
+      await fetchingTxsQueue.add(`${block}`, block);
+    });
 
     await redis.set(NEXT_START_SLOT, end + 1);
   };
@@ -117,14 +115,17 @@ export const stream = async (firstslot, lastslot) => {
    */
   await redis.set(NEXT_START_SLOT, firstslot);
 
-  const postingQueueJobCount = await postingTxsQueue.getJobCounts('active', 'waiting', 'delayed');
-  if ((postingQueueJobCount.waiting + postingQueueJobCount.active + postingQueueJobCount.delayed) === 0) {
+  const jobCount = await postingTxsQueue.getJobCounts('active', 'waiting', 'delayed');
+  if ((jobCount.waiting + jobCount.active + jobCount.delayed) === 0) {
     await fetchSlots();
   }
 
   txFetchingWorker.on('drained', async () => {
     const postingQueueJobCount = await postingTxsQueue.getJobCounts('active', 'waiting', 'delayed');
-    if ((postingQueueJobCount.waiting + postingQueueJobCount.active + postingQueueJobCount.delayed) > 0) {
+    if ((postingQueueJobCount.waiting
+        + postingQueueJobCount.active
+        + postingQueueJobCount.delayed
+    ) > 0) {
       return;
     }
     await fetchSlots();
@@ -136,19 +137,28 @@ export const stream = async (firstslot, lastslot) => {
 
   txStatusPollingWorker.on('drained', async () => {
     const pendingQueueJobCount = await pendingTxsQueue.getJobCounts('active', 'waiting', 'delayed');
-    if ((pendingQueueJobCount.waiting + pendingQueueJobCount.active + pendingQueueJobCount.delayed) > 0) {
+    if ((pendingQueueJobCount.waiting
+        + pendingQueueJobCount.active
+        + pendingQueueJobCount.delayed
+    ) > 0) {
       return;
     }
 
     const start = parseInt(await redis.get(NEXT_START_SLOT), 10);
     if (start > lastslot) {
       const fetchingQueueJobCount = await fetchingTxsQueue.getJobCounts('active', 'waiting', 'delayed');
-      if ((fetchingQueueJobCount.waiting + fetchingQueueJobCount.active + fetchingQueueJobCount.delayed) > 0) {
+      if ((fetchingQueueJobCount.waiting
+          + fetchingQueueJobCount.active
+          + fetchingQueueJobCount.delayed
+      ) > 0) {
         return;
       }
 
       const postingQueueJobCount = await postingTxsQueue.getJobCounts('active', 'waiting', 'delayed');
-      if ((postingQueueJobCount.waiting + postingQueueJobCount.active + postingQueueJobCount.delayed) > 0) {
+      if ((postingQueueJobCount.waiting
+          + postingQueueJobCount.active
+          + postingQueueJobCount.delayed
+      ) > 0) {
         return;
       }
 
@@ -182,11 +192,9 @@ export const livestream = async () => {
       throw new Error(`Failed to fetch confirmed Solana blocks ids: ${err}`);
     }
 
-    // eslint-disable-next-line no-plusplus
-    for (let i = 0; i < confirmedBlocks.length; ++i) {
-      const blockNumber = confirmedBlocks.shift();
-      await fetchingTxsQueue.add(`${blockNumber}`, blockNumber);
-    }
+    confirmedBlocks.map(async (block) => {
+      await fetchingTxsQueue.add(`${block}`, block);
+    });
 
     await redis.set(LAST_FETCHED_SLOT, end);
   };
@@ -248,10 +256,11 @@ export const livestream = async () => {
   /**
    * Livestream Solana slots to Arweave
    */
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     await fetchSlots();
-    await (new Promise(resolve => {
-      setTimeout(resolve, LIVESTREAM_POLLING_TIMEOUT)
+    await (new Promise((resolve) => {
+      setTimeout(resolve, LIVESTREAM_POLLING_TIMEOUT);
     }));
   }
 };
@@ -265,5 +274,5 @@ export const search = async (tagname, tagvalue) => {
   } catch (err) {
     throw new Error(`Failed to initialize Arweave Service: ${err}`);
   }
-  return searchService.searchByTag(tagname, tagvalue)
+  return searchService.searchByTag(tagname, tagvalue);
 };
