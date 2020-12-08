@@ -3,7 +3,8 @@
         "target": "es5",
         "downlevelIteration": true,
         "lib": ["esnext", "dom"],
-        "sourceMap": true
+        "sourceMap": true,
+      "allowSyntheticDefaultImports": true
     },
     "exclude": [
         "node_modules"

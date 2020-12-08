@@ -1,5 +1,4 @@
 import { getTransactionData, GraphQL } from '../api/Arweave.api';
-import { decompressData } from './Arweave.compression.service';
 import { getObjectValue } from './Arweave.tag.service';
 import { BLOCK_TAGS, TX_TAGS } from '../constants';
 
@@ -22,6 +21,7 @@ export default {
 
     const query = `query {
         transactions(
+            first: 100,
             tags: [
                 { name: "${alias}", values: ["${value}"] }
             ]
@@ -47,7 +47,8 @@ export default {
 
     const txArrays: Array<any> = await Promise.all(transactions.map(async (tx) => {
       const data = await getTransactionData(tx.node.id);
-      return decompressData(data);
+      const decoded = await (new TextDecoder('utf-8').decode(data));
+      return JSON.parse(decoded);
     }));
 
     const solanaTxs = txArrays.reduce((txs: Array<any>, txArray: any) => [...txs, ...txArray], []);
