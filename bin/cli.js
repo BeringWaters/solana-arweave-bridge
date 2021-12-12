@@ -122,15 +122,15 @@ solanaArweaveBridge
 solanaArweaveBridge
   .command('livestream')
   .description('Start livestream with specified options')
-  .option('--concurrency [concurrency] <number>', 'Number of fetching/writing threads. Default: 4')
-  .option('--database [database] <string>', 'Tag to identify bridge session. Default: \'dev\'')
-  .option('--key [key] <string>', 'Path to arweave key file. Default: \'arweave-keyfile\'')
+  .option('-c, --concurrency [concurrency] <number>', 'Number of fetching/writing threads. Default: 4')
+  .option('-d, --database [database] <string>', 'Tag to identify bridge session. Default: \'dev\'')
+  .option('-k, --key [key] <string>', 'Path to arweave key file. Default: \'arweave-keyfile\'')
   .option('--cleanup [cleanup] <boolean>', 'Clean up Redis before start. Default: false')
   .option('--verify [verify] <boolean>', 'Check if Arweave transaction already exists to avoid data duplication. Default: false')
-  .option('--network [network] <string>', 'Solana node url. Default: \'https://testnet.solana.com\'')
-  .option('--rpc [rpc] <string>', 'Solana rpc version. Default: \'2.0\'')
-  .option('--redisport [redisport] <number>', 'Redis port. Default: 6379')
-  .option('--redishost [redishost] <string>', 'Redis host. Default: \'127.0.0.1\'')
+  .option('-n, --network [network] <string>', 'Solana node url. Default: \'https://testnet.solana.com\'')
+  .option('-r, --rpc [rpc] <string>', 'Solana rpc version. Default: \'2.0\'')
+  .option('-p, --redisport [redisport] <number>', 'Redis port. Default: 6379')
+  .option('-h, --redishost [redishost] <string>', 'Redis host. Default: \'127.0.0.1\'')
   .action((options) => {
     const {
       concurrency,
